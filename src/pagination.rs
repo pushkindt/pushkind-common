@@ -1,5 +1,20 @@
+//! Helpers for building page navigation widgets.
+//!
+//! The pagination algorithm computes a list of page numbers with optional
+//! ellipses so templates can render compact navigation controls. A few pages
+//! from the beginning and end are always shown while the pages around the
+//! current one remain visible as well.
+
 use serde::Serialize;
 
+/// Calculate a list of page numbers for a pagination bar.
+///
+/// `total_pages` is the total number of pages. `current_page` denotes the
+/// page currently displayed. `left_edge` and `right_edge` specify how many
+/// pages are always shown at the start and end of the pagination sequence.
+/// `left_current` and `right_current` control how many pages are visible on
+/// each side of the current page. `None` values in the resulting vector
+/// represent collapsed ranges (ellipses).
 fn get_pages(
     total_pages: usize,
     current_page: usize,
@@ -38,6 +53,11 @@ fn get_pages(
 }
 
 #[derive(Serialize)]
+/// Items of a single page together with pagination info.
+///
+/// The sequence of page numbers is stored in `pages` and is suitable for
+/// building navigation controls. `page` keeps the normalized current page
+/// number.
 pub struct Paginated<T> {
     items: Vec<T>,
     pages: Vec<Option<usize>>,
@@ -45,6 +65,10 @@ pub struct Paginated<T> {
 }
 
 impl<T> Paginated<T> {
+    /// Create a [`Paginated`] value from a list of items.
+    ///
+    /// A `current_page` of zero is interpreted as page one. The page list is
+    /// generated using [`get_pages`].
     pub fn new(items: Vec<T>, current_page: usize, total_pages: usize) -> Self {
         let current_page = if current_page == 0 { 1 } else { current_page };
 
