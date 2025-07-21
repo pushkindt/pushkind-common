@@ -1,4 +1,4 @@
-//! Database connection helerrorpers.
+//! Database connection helpers.
 //!
 //! This module provides a small wrapper around the Diesel connection pool and
 //! utilities to establish a connection to the SQLite database used in the
