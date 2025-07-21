@@ -64,21 +64,21 @@ mod tests {
         }
     }
 
-    #[test]
-    fn check_role_detects_role() {
+    #[actix_web::test]
+    async fn check_role_detects_role() {
         assert!(check_role("admin", &["user", "admin"]));
         assert!(!check_role("admin", &["user", "manager"]));
     }
 
-    #[test]
-    fn redirect_sets_location_header() {
+    #[actix_web::test]
+    async fn redirect_sets_location_header() {
         let resp = redirect("/target");
         assert_eq!(resp.status(), StatusCode::SEE_OTHER);
         assert_eq!(resp.headers().get(header::LOCATION).unwrap(), "/target");
     }
 
-    #[test]
-    fn test_alert_level_to_str_mappings() {
+    #[actix_web::test]
+    async fn test_alert_level_to_str_mappings() {
         assert_eq!(alert_level_to_str(&Level::Error), "danger");
         assert_eq!(alert_level_to_str(&Level::Warning), "warning");
         assert_eq!(alert_level_to_str(&Level::Success), "success");
