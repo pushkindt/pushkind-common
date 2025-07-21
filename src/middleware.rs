@@ -1,3 +1,10 @@
+//! Middleware for redirecting unauthorized requests to an external
+//! authentication service.
+//!
+//! The service URL is provided via [`CommonServerConfig`]. When the wrapped
+//! service responds with `401 Unauthorized`, a `303 See Other` response is
+//! returned pointing to the configured authentication service.
+
 use actix_web::{
     Error, HttpResponse,
     body::EitherBody,
@@ -10,8 +17,15 @@ use std::future::{Ready, ready};
 
 use crate::models::config::CommonServerConfig;
 
+/// Middleware factory used to redirect unauthorized requests to the
+/// authentication service defined in [`CommonServerConfig`].
+///
+/// Attach this with `.wrap()` around services that should redirect users when
+/// a `401 Unauthorized` response is encountered.
 pub struct RedirectUnauthorized;
 
+/// Creates [`RedirectUnauthorizedMiddleware`] without any asynchronous
+/// initialization by simply storing the provided service.
 impl<S, B> Transform<S, ServiceRequest> for RedirectUnauthorized
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
@@ -29,10 +43,14 @@ where
     }
 }
 
+/// Service produced by [`RedirectUnauthorized`] that wraps another service
+/// and handles unauthorized responses.
 pub struct RedirectUnauthorizedMiddleware<S> {
     service: S,
 }
 
+/// Calls the wrapped service and redirects to the authentication service if
+/// a `401 Unauthorized` response is encountered.
 impl<S, B> Service<ServiceRequest> for RedirectUnauthorizedMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
