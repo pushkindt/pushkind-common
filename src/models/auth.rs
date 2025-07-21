@@ -42,7 +42,7 @@ impl AuthenticatedUser {
         )
     }
     /// Decode a JWT and return the contained claims.
-    fn from_jwt(token: &str, secret: &str) -> Result<Self, jsonwebtoken::errors::Error> {
+    pub fn from_jwt(token: &str, secret: &str) -> Result<Self, jsonwebtoken::errors::Error> {
         let validation = jsonwebtoken::Validation::default();
         let token_data = jsonwebtoken::decode::<Self>(
             token,
