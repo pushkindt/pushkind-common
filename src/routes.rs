@@ -1,5 +1,6 @@
-use actix_web::HttpResponse;
+use actix_identity::Identity;
 use actix_web::http::header;
+use actix_web::{HttpResponse, Responder, post};
 use actix_web_flash_messages::{FlashMessage, Level};
 
 use crate::models::auth::AuthenticatedUser;
@@ -56,16 +57,22 @@ pub fn ensure_role(
     }
 }
 
+#[post("/logout")]
+pub async fn logout(user: Identity) -> impl Responder {
+    user.logout();
+    redirect("/")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::http::StatusCode;
-    use actix_web_flash_messages::Level;
-    use actix_web::{test, App, http::header, web, HttpResponse};
     use actix_web::cookie::Key;
+    use actix_web::http::StatusCode;
+    use actix_web::{App, HttpResponse, http::header, test, web};
+    use actix_web_flash_messages::FlashMessagesFramework;
+    use actix_web_flash_messages::Level;
     use actix_web_flash_messages::storage::CookieMessageStore;
     use actix_web_flash_messages::storage::FlashMessageStore;
-    use actix_web_flash_messages::FlashMessagesFramework;
 
     fn sample_user(roles: Vec<&str>) -> AuthenticatedUser {
         AuthenticatedUser {
@@ -123,7 +130,7 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .wrap(framework)
-                .default_service(web::to(move || handler(sample_user(vec!["user"]))))
+                .default_service(web::to(move || handler(sample_user(vec!["user"])))),
         )
         .await;
 
