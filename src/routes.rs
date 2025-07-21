@@ -86,8 +86,8 @@ mod tests {
         assert_eq!(alert_level_to_str(&Level::Debug), "info");
     }
 
-    #[test]
-    fn ensure_role_allows_matching_role() {
+    #[actix_web::test]
+    async fn ensure_role_allows_matching_role() {
         let user = sample_user(vec!["admin"]);
         let result = ensure_role(&user, "admin", Some("/"));
         assert!(result.is_ok());
