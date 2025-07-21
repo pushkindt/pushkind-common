@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::config::CommonServerConfig;
 
+/// Claims representing an authenticated user stored inside a JWT.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthenticatedUser {
     pub sub: String, // subject (user ID or UUID)
@@ -20,6 +21,7 @@ pub struct AuthenticatedUser {
 }
 
 impl AuthenticatedUser {
+    /// Set the `exp` claim to the current time plus the provided number of days.
     pub fn set_expiration(&mut self, days: i64) {
         let expiration = Utc::now()
             .checked_add_signed(Duration::days(days))
@@ -28,6 +30,9 @@ impl AuthenticatedUser {
         self.exp = expiration;
     }
 
+    /// Encode this user into a JWT using the given secret key.
+    ///
+    /// The expiration is automatically set to 7 days from now.
     pub fn to_jwt(&mut self, secret: &str) -> Result<String, jsonwebtoken::errors::Error> {
         self.set_expiration(7);
         encode(
@@ -36,6 +41,7 @@ impl AuthenticatedUser {
             &EncodingKey::from_secret(secret.as_ref()),
         )
     }
+    /// Decode a JWT and return the contained claims.
     fn from_jwt(token: &str, secret: &str) -> Result<Self, jsonwebtoken::errors::Error> {
         let validation = jsonwebtoken::Validation::default();
         let token_data = jsonwebtoken::decode::<Self>(
@@ -112,3 +118,6 @@ impl FromRequest for AuthenticatedUser {
         ready(Err(ErrorUnauthorized("Unauthorized")))
     }
 }
+
+// NOTE: Implementing `FromRequest` allows `AuthenticatedUser` to be extracted
+// directly from an incoming `HttpRequest` in Actix handlers.
