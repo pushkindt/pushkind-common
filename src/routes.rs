@@ -64,21 +64,21 @@ mod tests {
         }
     }
 
-    #[actix_web::test]
-    async fn check_role_detects_role() {
+    #[test]
+    fn check_role_detects_role() {
         assert!(check_role("admin", &["user", "admin"]));
         assert!(!check_role("admin", &["user", "manager"]));
     }
 
-    #[actix_web::test]
-    async fn redirect_sets_location_header() {
+    #[test]
+    fn redirect_sets_location_header() {
         let resp = redirect("/target");
         assert_eq!(resp.status(), StatusCode::SEE_OTHER);
         assert_eq!(resp.headers().get(header::LOCATION).unwrap(), "/target");
     }
 
-    #[actix_web::test]
-    async fn test_alert_level_to_str_mappings() {
+    #[test]
+    fn test_alert_level_to_str_mappings() {
         assert_eq!(alert_level_to_str(&Level::Error), "danger");
         assert_eq!(alert_level_to_str(&Level::Warning), "warning");
         assert_eq!(alert_level_to_str(&Level::Success), "success");
@@ -86,8 +86,8 @@ mod tests {
         assert_eq!(alert_level_to_str(&Level::Debug), "info");
     }
 
-    #[actix_web::test]
-    async fn ensure_role_allows_matching_role() {
+    #[test]
+    fn ensure_role_allows_matching_role() {
         let user = sample_user(vec!["admin"]);
         let result = ensure_role(&user, "admin", Some("/"));
         assert!(result.is_ok());
