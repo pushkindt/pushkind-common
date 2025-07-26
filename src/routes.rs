@@ -5,10 +5,6 @@ use actix_web_flash_messages::{FlashMessage, Level};
 
 use crate::models::auth::AuthenticatedUser;
 
-/// Default number of list items shown when a page size is not specified.
-/// This constant is used by pagination helpers throughout the crate.
-pub const DEFAULT_ITEMS_PER_PAGE: usize = 20;
-
 /// Convert a [`FlashMessage`] [`Level`] to a CSS class string used by the
 /// templates. Unknown levels default to `info`.
 pub fn alert_level_to_str(level: &Level) -> &'static str {
