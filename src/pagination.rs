@@ -7,6 +7,10 @@
 
 use serde::Serialize;
 
+/// Default number of list items shown when a page size is not specified.
+/// This constant is used by pagination helpers throughout the crate.
+pub const DEFAULT_ITEMS_PER_PAGE: usize = 20;
+
 /// Calculate a list of page numbers for a pagination bar.
 ///
 /// `total_pages` is the total number of pages. `current_page` denotes the
@@ -62,6 +66,22 @@ pub struct Paginated<T> {
     items: Vec<T>,
     pages: Vec<Option<usize>>,
     page: usize,
+}
+
+#[derive(Debug, Clone)]
+/// A helper struct to provide pagination information
+pub struct Pagination {
+    pub page: usize,
+    pub per_page: usize,
+}
+
+impl Default for Pagination {
+    fn default() -> Self {
+        Self {
+            page: 1,
+            per_page: DEFAULT_ITEMS_PER_PAGE,
+        }
+    }
 }
 
 impl<T> Paginated<T> {
