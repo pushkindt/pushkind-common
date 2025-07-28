@@ -5,7 +5,8 @@ edition = "2024"
 
 [features]
 default = []
-db = ["diesel", "log"]
+db = ["diesel", "log", "thiserror"]
+zeromq = ["zmq"]
 
 [dependencies]
 actix-web = "4.11.0"
@@ -18,3 +19,5 @@ futures-util = "0.3.31"
 actix-web-flash-messages = { version = "0.5.0", features = ["cookies"] }
 diesel = { version = "2.2.12", features = ["sqlite", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"], optional = true }
 log = { version = "0.4.27", optional = true }
+zmq = {  version = "0.10.0", optional = true }
+thiserror = { version = "2.0.12", optional = true }
