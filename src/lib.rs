@@ -11,3 +11,8 @@ pub mod routes;
 
 #[cfg(feature = "db")]
 pub mod db;
+#[cfg(feature = "db")]
+pub mod repository;
+
+#[cfg(feature = "zeromq")]
+pub mod zmq;
