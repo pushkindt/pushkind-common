@@ -7,8 +7,6 @@
 #[cfg(feature = "actix")]
 pub mod middleware;
 #[cfg(feature = "actix")]
-pub mod models;
-#[cfg(feature = "actix")]
 pub mod pagination;
 #[cfg(feature = "actix")]
 pub mod routes;
@@ -20,3 +18,7 @@ pub mod repository;
 
 #[cfg(feature = "zeromq")]
 pub mod zmq;
+
+pub mod domain;
+pub mod models;
+pub mod schema;
