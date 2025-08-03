@@ -1,3 +1,4 @@
+#![cfg(feature = "actix")]
 use actix_web::{
     App, HttpResponse,
     http::{StatusCode, header},
