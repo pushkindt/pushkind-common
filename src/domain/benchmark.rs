@@ -15,6 +15,7 @@ pub struct Benchmark {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub embedding: Option<Vec<u8>>,
+    pub processing: bool,
 }
 
 pub struct NewBenchmark {

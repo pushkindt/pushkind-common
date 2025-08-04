@@ -18,6 +18,7 @@ pub struct Benchmark {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub embedding: Option<Vec<u8>>,
+    pub processing: bool,
 }
 
 #[derive(Insertable)]
@@ -50,6 +51,7 @@ impl From<Benchmark> for DomainBenchmark {
             created_at: benchmark.created_at,
             updated_at: benchmark.updated_at,
             embedding: benchmark.embedding,
+            processing: benchmark.processing,
         }
     }
 }
