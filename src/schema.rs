@@ -14,6 +14,7 @@ pub mod dantes {
             created_at -> Timestamp,
             updated_at -> Timestamp,
             embedding -> Nullable<Binary>,
+            processing -> Bool,
         }
     }
 
