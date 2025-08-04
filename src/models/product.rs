@@ -50,6 +50,7 @@ impl From<Product> for DomainProduct {
             url: product.url,
             created_at: product.created_at,
             updated_at: product.updated_at,
+            embedding: product.embedding,
         }
     }
 }

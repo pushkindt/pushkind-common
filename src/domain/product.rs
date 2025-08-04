@@ -15,6 +15,7 @@ pub struct Product {
     pub url: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub embedding: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
