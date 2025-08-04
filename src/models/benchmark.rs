@@ -49,6 +49,7 @@ impl From<Benchmark> for DomainBenchmark {
             description: benchmark.description,
             created_at: benchmark.created_at,
             updated_at: benchmark.updated_at,
+            embedding: benchmark.embedding,
         }
     }
 }
