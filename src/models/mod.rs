@@ -9,3 +9,5 @@ pub mod benchmark;
 pub mod crawler;
 #[cfg(feature = "dantes")]
 pub mod product;
+
+pub mod zmq;
