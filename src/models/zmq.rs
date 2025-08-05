@@ -1,12 +1,12 @@
 #[cfg(feature = "dantes")]
 pub mod dantes {
-    use serde::Deserialize;
-    
+    use serde::{Deserialize, Serialize};
+
     /// Messages received over ZMQ to control crawlers or run benchmarks.
     ///
     /// - `Crawler` requests execution of a crawler described by [`CrawlerSelector`].
     /// - `Benchmark` triggers a benchmark run with the provided benchmark_id.
-    #[derive(Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub enum ZMQMessage {
         /// Run the specified crawler.
         Crawler(CrawlerSelector),
@@ -18,7 +18,7 @@ pub mod dantes {
     ///
     /// - `Selector` chooses a crawler by name.
     /// - `SelectorProducts` specifies a crawler and products to fetch.
-    #[derive(Deserialize, Debug)]
+    #[derive(Serialize, Deserialize, Debug)]
     pub enum CrawlerSelector {
         /// Run the named crawler.
         Selector(String),
