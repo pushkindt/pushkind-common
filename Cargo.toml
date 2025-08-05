@@ -8,7 +8,7 @@ default = []
 actix = ["actix-web", "actix-identity", "chrono", "bcrypt", "jsonwebtoken", "actix-web-flash-messages", "futures-util", "serde"]
 db = ["diesel", "log", "thiserror"]
 dantes = ["db", "serde", "chrono"]
-zeromq = ["zmq"]
+zeromq = ["zmq", "log", "serde", "serde_json"]
 
 [dependencies]
 actix-web = { version = "4.11.0", optional = true }
@@ -23,3 +23,4 @@ diesel = { version = "2.2.12", features = ["sqlite", "r2d2", "chrono", "returnin
 log = { version = "0.4.27", optional = true }
 zmq = {  version = "0.10.0", optional = true }
 thiserror = { version = "2.0.12", optional = true }
+serde_json = { version = "1.0.142", optional = true }
