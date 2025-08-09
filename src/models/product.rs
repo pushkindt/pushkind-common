@@ -3,8 +3,9 @@ use diesel::prelude::*;
 
 use crate::domain::product::{NewProduct as DomainNewProduct, Product as DomainProduct};
 
-#[derive(Debug, Clone, Identifiable, Queryable)]
+#[derive(Debug, Clone, Identifiable, Queryable, QueryableByName)]
 #[diesel(table_name = crate::schema::dantes::products)]
+#[diesel(foreign_derive)]
 pub struct Product {
     pub id: i32,
     pub crawler_id: i32,
