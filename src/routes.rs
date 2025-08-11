@@ -1,10 +1,11 @@
 use actix_identity::Identity;
 use actix_web::http::header;
-use actix_web::{HttpResponse, Responder, post};
+use actix_web::{HttpResponse, Responder, get, post, web};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
 use tera::{Context, Tera};
 
 use crate::models::auth::AuthenticatedUser;
+use crate::models::config::CommonServerConfig;
 
 /// Convert a [`FlashMessage`] [`Level`] to a CSS class string used by the
 /// templates. Unknown levels default to `info`.
@@ -90,6 +91,23 @@ pub fn base_context(
 pub async fn logout(user: Identity) -> impl Responder {
     user.logout();
     redirect("/")
+}
+
+#[get("/na")]
+pub async fn not_assigned(
+    user: AuthenticatedUser,
+    flash_messages: IncomingFlashMessages,
+    server_config: web::Data<CommonServerConfig>,
+    tera: web::Data<Tera>,
+) -> impl Responder {
+    let context = base_context(
+        &flash_messages,
+        &user,
+        "index",
+        &server_config.auth_service_url,
+    );
+
+    render_template(&tera, "main/not_assigned.html", &context)
 }
 
 #[cfg(test)]
