@@ -1,7 +1,7 @@
 use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, post};
-use actix_web_flash_messages::{FlashMessage, Level};
+use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
 
 use crate::models::auth::AuthenticatedUser;
 
@@ -53,6 +53,38 @@ pub fn ensure_role(
     }
 }
 
+/// Render a Tera template with the provided context and return an HTTP response.
+///
+/// If template rendering fails, logs the error and returns an empty response body.
+pub fn render_template(tera: &Tera, template: &str, context: &Context) -> HttpResponse {
+    HttpResponse::Ok().body(tera.render(template, context).unwrap_or_else(|e| {
+        log::error!("Failed to render template '{template}': {e}");
+        String::new()
+    }))
+}
+
+/// Create a base template context with common variables.
+///
+/// Includes flash message alerts, current user, current page, and home URL.
+pub fn base_context(
+    flash_messages: &IncomingFlashMessages,
+    user: &AuthenticatedUser,
+    current_page: &str,
+    home_url: &str,
+) -> Context {
+    let alerts = flash_messages
+        .iter()
+        .map(|f| (f.content(), alert_level_to_str(&f.level())))
+        .collect::<Vec<_>>();
+
+    let mut context = Context::new();
+    context.insert("alerts", &alerts);
+    context.insert("current_user", user);
+    context.insert("current_page", current_page);
+    context.insert("home_url", home_url);
+    context
+}
+
 #[post("/logout")]
 pub async fn logout(user: Identity) -> impl Responder {
     user.logout();
@@ -69,6 +101,7 @@ mod tests {
     use actix_web_flash_messages::Level;
     use actix_web_flash_messages::storage::CookieMessageStore;
     use actix_web_flash_messages::storage::FlashMessageStore;
+    use tera::{Tera, Context};
 
     fn sample_user(roles: Vec<&str>) -> AuthenticatedUser {
         AuthenticatedUser {
@@ -155,5 +188,39 @@ mod tests {
         let message = &messages[0];
         assert_eq!(message.content(), "Недостаточно прав.");
         assert_eq!(message.level(), Level::Error);
+    }
+
+    #[actix_web::test]
+    async fn base_context_includes_all_fields() {
+        let user = sample_user(vec!["admin"]);
+        let flash_messages = IncomingFlashMessages::default();
+        
+        let context = base_context(&flash_messages, &user, "dashboard", "/home");
+        
+        assert!(context.get("current_user").is_some());
+        assert_eq!(context.get("current_page").unwrap(), "dashboard");
+        assert_eq!(context.get("home_url").unwrap(), "/home");
+        assert!(context.get("alerts").is_some());
+    }
+
+    #[actix_web::test]
+    async fn render_template_returns_ok_response() {
+        let mut tera = Tera::new("templates/**/*").unwrap_or_else(|_| Tera::new());
+        tera.add_raw_template("test", "Hello {{name}}!").unwrap();
+        
+        let mut context = Context::new();
+        context.insert("name", "World");
+        
+        let response = render_template(&tera, "test", &context);
+        assert_eq!(response.status(), StatusCode::OK);
+    }
+
+    #[actix_web::test]
+    async fn render_template_handles_missing_template() {
+        let tera = Tera::new("templates/**/*").unwrap_or_else(|_| Tera::new());
+        let context = Context::new();
+        
+        let response = render_template(&tera, "nonexistent", &context);
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }
