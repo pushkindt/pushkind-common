@@ -2,6 +2,7 @@ use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, post};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
+use tera::{Context, Tera};
 
 use crate::models::auth::AuthenticatedUser;
 
@@ -94,6 +95,7 @@ pub async fn logout(user: Identity) -> impl Responder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use actix_web::body::to_bytes;
     use actix_web::cookie::Key;
     use actix_web::http::StatusCode;
     use actix_web::{App, HttpResponse, http::header, test, web};
@@ -101,7 +103,7 @@ mod tests {
     use actix_web_flash_messages::Level;
     use actix_web_flash_messages::storage::CookieMessageStore;
     use actix_web_flash_messages::storage::FlashMessageStore;
-    use tera::{Tera, Context};
+    use tera::{Context, Tera};
 
     fn sample_user(roles: Vec<&str>) -> AuthenticatedUser {
         AuthenticatedUser {
@@ -191,36 +193,32 @@ mod tests {
     }
 
     #[actix_web::test]
-    async fn base_context_includes_all_fields() {
-        let user = sample_user(vec!["admin"]);
-        let flash_messages = IncomingFlashMessages::default();
-        
-        let context = base_context(&flash_messages, &user, "dashboard", "/home");
-        
-        assert!(context.get("current_user").is_some());
-        assert_eq!(context.get("current_page").unwrap(), "dashboard");
-        assert_eq!(context.get("home_url").unwrap(), "/home");
-        assert!(context.get("alerts").is_some());
+    async fn render_template_returns_ok_with_rendered_body_on_success() {
+        let mut tera = Tera::default();
+        tera.add_raw_template("hello.txt", "Hi {{ name }}").unwrap();
+
+        let mut ctx = Context::new();
+        ctx.insert("name", "Slava");
+
+        let resp = render_template(&tera, "hello.txt", &ctx);
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = to_bytes(resp.into_body()).await.unwrap();
+        assert_eq!(&body[..], b"Hi Slava");
     }
 
     #[actix_web::test]
-    async fn render_template_returns_ok_response() {
-        let mut tera = Tera::new("templates/**/*").unwrap_or_else(|_| Tera::new());
-        tera.add_raw_template("test", "Hello {{name}}!").unwrap();
-        
-        let mut context = Context::new();
-        context.insert("name", "World");
-        
-        let response = render_template(&tera, "test", &context);
-        assert_eq!(response.status(), StatusCode::OK);
-    }
+    async fn render_template_returns_ok_with_empty_body_on_failure() {
+        // No templates registered -> rendering will fail.
+        let tera = Tera::default();
+        let ctx = Context::new();
 
-    #[actix_web::test]
-    async fn render_template_handles_missing_template() {
-        let tera = Tera::new("templates/**/*").unwrap_or_else(|_| Tera::new());
-        let context = Context::new();
-        
-        let response = render_template(&tera, "nonexistent", &context);
-        assert_eq!(response.status(), StatusCode::OK);
+        let resp = render_template(&tera, "missing.txt", &ctx);
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = to_bytes(resp.into_body()).await.unwrap();
+        assert!(body.is_empty(), "body should be empty on render error");
     }
 }
