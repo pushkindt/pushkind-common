@@ -1,7 +1,8 @@
 use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, post};
-use actix_web_flash_messages::{FlashMessage, Level};
+use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
+use tera::{Context, Tera};
 
 use crate::models::auth::AuthenticatedUser;
 
@@ -53,6 +54,38 @@ pub fn ensure_role(
     }
 }
 
+/// Render a Tera template with the provided context and return an HTTP response.
+///
+/// If template rendering fails, logs the error and returns an empty response body.
+pub fn render_template(tera: &Tera, template: &str, context: &Context) -> HttpResponse {
+    HttpResponse::Ok().body(tera.render(template, context).unwrap_or_else(|e| {
+        log::error!("Failed to render template '{template}': {e}");
+        String::new()
+    }))
+}
+
+/// Create a base template context with common variables.
+///
+/// Includes flash message alerts, current user, current page, and home URL.
+pub fn base_context(
+    flash_messages: &IncomingFlashMessages,
+    user: &AuthenticatedUser,
+    current_page: &str,
+    home_url: &str,
+) -> Context {
+    let alerts = flash_messages
+        .iter()
+        .map(|f| (f.content(), alert_level_to_str(&f.level())))
+        .collect::<Vec<_>>();
+
+    let mut context = Context::new();
+    context.insert("alerts", &alerts);
+    context.insert("current_user", user);
+    context.insert("current_page", current_page);
+    context.insert("home_url", home_url);
+    context
+}
+
 #[post("/logout")]
 pub async fn logout(user: Identity) -> impl Responder {
     user.logout();
@@ -62,6 +95,7 @@ pub async fn logout(user: Identity) -> impl Responder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use actix_web::body::to_bytes;
     use actix_web::cookie::Key;
     use actix_web::http::StatusCode;
     use actix_web::{App, HttpResponse, http::header, test, web};
@@ -69,6 +103,7 @@ mod tests {
     use actix_web_flash_messages::Level;
     use actix_web_flash_messages::storage::CookieMessageStore;
     use actix_web_flash_messages::storage::FlashMessageStore;
+    use tera::{Context, Tera};
 
     fn sample_user(roles: Vec<&str>) -> AuthenticatedUser {
         AuthenticatedUser {
@@ -155,5 +190,35 @@ mod tests {
         let message = &messages[0];
         assert_eq!(message.content(), "Недостаточно прав.");
         assert_eq!(message.level(), Level::Error);
+    }
+
+    #[actix_web::test]
+    async fn render_template_returns_ok_with_rendered_body_on_success() {
+        let mut tera = Tera::default();
+        tera.add_raw_template("hello.txt", "Hi {{ name }}").unwrap();
+
+        let mut ctx = Context::new();
+        ctx.insert("name", "Slava");
+
+        let resp = render_template(&tera, "hello.txt", &ctx);
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = to_bytes(resp.into_body()).await.unwrap();
+        assert_eq!(&body[..], b"Hi Slava");
+    }
+
+    #[actix_web::test]
+    async fn render_template_returns_ok_with_empty_body_on_failure() {
+        // No templates registered -> rendering will fail.
+        let tera = Tera::default();
+        let ctx = Context::new();
+
+        let resp = render_template(&tera, "missing.txt", &ctx);
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = to_bytes(resp.into_body()).await.unwrap();
+        assert!(body.is_empty(), "body should be empty on render error");
     }
 }

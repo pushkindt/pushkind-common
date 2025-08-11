@@ -5,7 +5,18 @@ edition = "2024"
 
 [features]
 default = []
-actix = ["actix-web", "actix-identity", "chrono", "bcrypt", "jsonwebtoken", "actix-web-flash-messages", "futures-util", "serde"]
+actix = [
+    "actix-web",
+    "actix-identity",
+    "chrono",
+    "bcrypt",
+    "jsonwebtoken",
+    "actix-web-flash-messages",
+    "futures-util",
+    "serde",
+    "log",
+    "tera",
+]
 db = ["diesel", "log", "thiserror"]
 dantes = ["db", "serde", "chrono"]
 zeromq = ["zmq", "log", "serde", "serde_json"]
@@ -18,9 +29,17 @@ bcrypt = { version = "0.17.0", optional = true }
 jsonwebtoken = { version = "9.3.1", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 futures-util = { version = "0.3.31", optional = true }
-actix-web-flash-messages = { version = "0.5.0", features = ["cookies"], optional = true }
-diesel = { version = "2.2.12", features = ["sqlite", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35"], optional = true }
+actix-web-flash-messages = { version = "0.5.0", features = [
+    "cookies",
+], optional = true }
+diesel = { version = "2.2.12", features = [
+    "sqlite",
+    "r2d2",
+    "chrono",
+    "returning_clauses_for_sqlite_3_35",
+], optional = true }
 log = { version = "0.4.27", optional = true }
-zmq = {  version = "0.10.0", optional = true }
+zmq = { version = "0.10.0", optional = true }
 thiserror = { version = "2.0.12", optional = true }
 serde_json = { version = "1.0.142", optional = true }
+tera = { version = "1.20.0", features = ["builtins"], optional = true }
