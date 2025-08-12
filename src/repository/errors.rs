@@ -1,7 +1,14 @@
+//! Error types used by repository implementations.
+//!
+//! These errors provide a consistent abstraction over Diesel and
+//! connection-pool errors so callers can react without depending on the
+//! underlying database layer.
+
 use diesel::r2d2::{Error as R2D2Error, PoolError};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use thiserror::Error;
 
+/// Errors that can occur while interacting with the persistence layer.
 #[derive(Debug, Error)]
 pub enum RepositoryError {
     #[error("Entity not found")]
@@ -23,6 +30,7 @@ pub enum RepositoryError {
     Unexpected(String),
 }
 
+/// Convenient alias for results returned by repository functions.
 pub type RepositoryResult<T> = Result<T, RepositoryError>;
 
 impl From<DieselError> for RepositoryError {

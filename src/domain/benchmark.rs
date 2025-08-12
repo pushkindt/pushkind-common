@@ -1,7 +1,11 @@
 use chrono::NaiveDateTime;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+/// A benchmark reference product used for price comparisons.
+///
+/// This domain struct mirrors the `benchmarks` table and is
+/// independent from any persistence layer representation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Benchmark {
     pub id: i32,
     pub hub_id: i32,
@@ -18,6 +22,11 @@ pub struct Benchmark {
     pub processing: bool,
 }
 
+/// Data required to insert a new [`Benchmark`].
+///
+/// This struct is typically deserialized from incoming requests
+/// before being converted into a database model.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct NewBenchmark {
     pub hub_id: i32,
     pub name: String,
