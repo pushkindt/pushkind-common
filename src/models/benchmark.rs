@@ -3,6 +3,7 @@ use diesel::prelude::*;
 
 use crate::domain::benchmark::{Benchmark as DomainBenchmark, NewBenchmark as DomainNewBenchmark};
 
+/// Diesel model representing a row in the `benchmarks` table.
 #[derive(Debug, Clone, Identifiable, Queryable)]
 #[diesel(table_name = crate::schema::dantes::benchmarks)]
 pub struct Benchmark {
@@ -21,6 +22,7 @@ pub struct Benchmark {
     pub processing: bool,
 }
 
+/// Insertable form of [`Benchmark`] used for creating new rows.
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::dantes::benchmarks)]
 pub struct NewBenchmark<'a> {

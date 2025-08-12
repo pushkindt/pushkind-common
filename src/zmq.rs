@@ -1,5 +1,9 @@
 use serde::Serialize;
 
+/// Serialize `msg` and send it to `zmq_address` using a ZMQ `PUSH` socket.
+///
+/// A new socket is created for each call. Any serialization or socket errors
+/// are bubbled up to the caller.
 pub fn send_zmq_message<T: Serialize>(
     msg: &T,
     zmq_address: &str,
@@ -11,7 +15,7 @@ pub fn send_zmq_message<T: Serialize>(
     let serialized = serde_json::to_vec(msg)?;
     requester.send(&serialized, 0)?;
 
-    log::info!("Sent message {} bytes to {}", serialized.len(), zmq_address);
+    log::info!("Sent {} bytes to {}", serialized.len(), zmq_address);
 
     Ok(())
 }

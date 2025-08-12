@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+/// A product extracted from a crawler run.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Product {
     pub id: i32,
     pub crawler_id: i32,
@@ -18,6 +19,7 @@ pub struct Product {
     pub embedding: Option<Vec<u8>>,
 }
 
+/// Information required to create a new [`Product`].
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct NewProduct {
     pub crawler_id: i32,

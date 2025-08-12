@@ -3,6 +3,7 @@ use diesel::prelude::*;
 
 use crate::domain::crawler::Crawler as DomainCrawler;
 
+/// Diesel representation of a crawler row.
 #[derive(Debug, Clone, Identifiable, Queryable)]
 #[diesel(table_name = crate::schema::dantes::crawlers)]
 pub struct Crawler {

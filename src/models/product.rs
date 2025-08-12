@@ -3,6 +3,7 @@ use diesel::prelude::*;
 
 use crate::domain::product::{NewProduct as DomainNewProduct, Product as DomainProduct};
 
+/// Diesel model representing the `products` table.
 #[derive(Debug, Clone, Identifiable, Queryable, QueryableByName)]
 #[diesel(table_name = crate::schema::dantes::products)]
 #[diesel(foreign_derive)]
@@ -22,6 +23,7 @@ pub struct Product {
     pub embedding: Option<Vec<u8>>,
 }
 
+/// Insertable/patchable form of [`Product`].
 #[derive(Debug, Insertable, AsChangeset)]
 #[diesel(table_name = crate::schema::dantes::products)]
 pub struct NewProduct {

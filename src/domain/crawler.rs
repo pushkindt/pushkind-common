@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+/// Metadata about a crawler job and its progress.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Crawler {
     pub id: i32,
     pub hub_id: i32,
