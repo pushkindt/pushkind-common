@@ -20,6 +20,7 @@ pub struct Benchmark {
     pub updated_at: NaiveDateTime,
     pub embedding: Option<Vec<u8>>,
     pub processing: bool,
+    pub num_products: i32,
 }
 
 /// Data required to insert a new [`Benchmark`].
