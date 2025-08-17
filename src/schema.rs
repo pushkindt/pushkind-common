@@ -15,6 +15,7 @@ pub mod dantes {
             updated_at -> Timestamp,
             embedding -> Nullable<Binary>,
             processing -> Bool,
+            num_products -> Integer,
         }
     }
 
