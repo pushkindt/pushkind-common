@@ -20,6 +20,7 @@ pub struct Benchmark {
     pub updated_at: NaiveDateTime,
     pub embedding: Option<Vec<u8>>,
     pub processing: bool,
+    pub num_products: i32,
 }
 
 /// Insertable form of [`Benchmark`] used for creating new rows.
@@ -54,6 +55,7 @@ impl From<Benchmark> for DomainBenchmark {
             updated_at: benchmark.updated_at,
             embedding: benchmark.embedding,
             processing: benchmark.processing,
+            num_products: benchmark.num_products,
         }
     }
 }
