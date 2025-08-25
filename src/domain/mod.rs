@@ -9,3 +9,6 @@ pub mod benchmark;
 pub mod crawler;
 #[cfg(feature = "dantes")]
 pub mod product;
+
+#[cfg(feature = "emailer")]
+pub mod email;

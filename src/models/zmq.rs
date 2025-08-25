@@ -7,7 +7,7 @@ pub mod dantes {
     /// - `Crawler` requests execution of a crawler described by [`CrawlerSelector`].
     /// - `Benchmark` triggers a benchmark run with the provided benchmark_id.
     #[derive(Serialize, Deserialize, Debug)]
-    pub enum ZMQMessage {
+    pub enum ZMQCrawlerMessage {
         /// Run the specified crawler.
         Crawler(CrawlerSelector),
         /// Execute benchmarks with the provided benchmark_id.
@@ -24,5 +24,19 @@ pub mod dantes {
         Selector(String),
         /// Run the named crawler with the provided product URLs.
         SelectorProducts((String, Vec<String>)),
+    }
+}
+
+#[cfg(feature = "emailer")]
+pub mod emailer {
+
+    use serde::{Deserialize, Serialize};
+
+    use crate::domain::email::NewEmail;
+
+    #[derive(Serialize, Deserialize)]
+    pub enum ZMQSendEmailMessage {
+        NewEmail(NewEmail),
+        RetryEmail(i32),
     }
 }
