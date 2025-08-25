@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-/// Serialize `msg` and send it to `zmq_address` using a ZMQ `PUSH` socket.
+/// Serialize `msg` and send it to `zmq_address` using a ZMQ `PUB` socket.
 ///
 /// A new socket is created for each call. Any serialization or socket errors
 /// are bubbled up to the caller.
@@ -9,7 +9,7 @@ pub fn send_zmq_message<T: Serialize>(
     zmq_address: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let context = zmq::Context::new();
-    let requester = context.socket(zmq::PUSH)?;
+    let requester = context.socket(zmq::PUB)?;
     requester.connect(zmq_address)?;
 
     let serialized = serde_json::to_vec(msg)?;
