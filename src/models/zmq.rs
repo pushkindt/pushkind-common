@@ -33,10 +33,11 @@ pub mod emailer {
     use serde::{Deserialize, Serialize};
 
     use crate::domain::email::NewEmail;
+    use crate::models::auth::AuthenticatedUser;
 
     #[derive(Serialize, Deserialize)]
     pub enum ZMQSendEmailMessage {
-        NewEmail(NewEmail),
+        NewEmail((AuthenticatedUser, NewEmail)),
         RetryEmail((i32, i32)), // (id, hub_id)
     }
 }
