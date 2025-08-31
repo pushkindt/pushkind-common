@@ -37,7 +37,7 @@ pub mod emailer {
 
     #[derive(Serialize, Deserialize)]
     pub enum ZMQSendEmailMessage {
-        NewEmail((AuthenticatedUser, NewEmail)),
+        NewEmail(Box<(AuthenticatedUser, NewEmail)>),
         RetryEmail((i32, i32)), // (id, hub_id)
     }
 }
