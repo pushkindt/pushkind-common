@@ -2,10 +2,19 @@ use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
+use serde::Deserialize;
 use tera::{Context, Tera};
 
 use crate::models::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
+
+pub fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    Ok(opt.and_then(|s| if s.trim().is_empty() { None } else { Some(s) }))
+}
 
 /// Convert a [`FlashMessage`] [`Level`] to a CSS class string used by the
 /// templates. Unknown levels default to `info`.
