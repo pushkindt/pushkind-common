@@ -152,8 +152,8 @@ mod tests {
 
     #[actix_web::test]
     async fn check_role_detects_role() {
-        assert!(check_role("admin", &["user", "admin"]));
-        assert!(!check_role("admin", &["user", "manager"]));
+        assert!(check_role("admin", ["user", "admin"]));
+        assert!(!check_role("admin", ["user", "manager"]));
     }
 
     #[actix_web::test]

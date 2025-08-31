@@ -53,6 +53,37 @@ impl AuthenticatedUser {
     }
 }
 
+impl FromRequest for AuthenticatedUser {
+    type Error = Error;
+    type Future = Ready<Result<Self, Self::Error>>;
+
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let identity = Identity::from_request(req, &mut Payload::None)
+            .into_inner()
+            .map(|i| i.id().ok());
+
+        let server_config = req.app_data::<Data<CommonServerConfig>>();
+
+        let server_config = match server_config {
+            Some(config) => config,
+            None => return ready(Err(ErrorInternalServerError("Server config not found"))),
+        };
+
+        if let Ok(Some(uid)) = identity {
+            let claims = AuthenticatedUser::from_jwt(&uid, &server_config.secret);
+
+            match claims {
+                Ok(claims) => return ready(Ok(claims)),
+                Err(_) => return ready(Err(ErrorUnauthorized("Invalid user"))),
+            };
+        }
+        ready(Err(ErrorUnauthorized("Unauthorized")))
+    }
+}
+
+// NOTE: Implementing `FromRequest` allows `AuthenticatedUser` to be extracted
+// directly from an incoming `HttpRequest` in Actix handlers.
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -90,34 +121,3 @@ mod tests {
         assert_eq!(decoded.exp, user.exp);
     }
 }
-
-impl FromRequest for AuthenticatedUser {
-    type Error = Error;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let identity = Identity::from_request(req, &mut Payload::None)
-            .into_inner()
-            .map(|i| i.id().ok());
-
-        let server_config = req.app_data::<Data<CommonServerConfig>>();
-
-        let server_config = match server_config {
-            Some(config) => config,
-            None => return ready(Err(ErrorInternalServerError("Server config not found"))),
-        };
-
-        if let Ok(Some(uid)) = identity {
-            let claims = AuthenticatedUser::from_jwt(&uid, &server_config.secret);
-
-            match claims {
-                Ok(claims) => return ready(Ok(claims)),
-                Err(_) => return ready(Err(ErrorUnauthorized("Invalid user"))),
-            };
-        }
-        ready(Err(ErrorUnauthorized("Unauthorized")))
-    }
-}
-
-// NOTE: Implementing `FromRequest` allows `AuthenticatedUser` to be extracted
-// directly from an incoming `HttpRequest` in Actix handlers.
