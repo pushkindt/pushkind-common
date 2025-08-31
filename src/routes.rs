@@ -8,12 +8,19 @@ use tera::{Context, Tera};
 use crate::models::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
 
-pub fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
 {
     let opt = Option::<String>::deserialize(deserializer)?;
-    Ok(opt.and_then(|s| if s.trim().is_empty() { None } else { Some(s) }))
+    Ok(opt.and_then(|s| {
+        let trimmed = s.trim().to_string();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed)
+        }
+    }))
 }
 
 /// Convert a [`FlashMessage`] [`Level`] to a CSS class string used by the
