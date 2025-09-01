@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::domain::product::{NewProduct as DomainNewProduct, Product as DomainProduct};
+use crate::domain::dantes::product::{NewProduct as DomainNewProduct, Product as DomainProduct};
 
 /// Diesel model representing the `products` table.
 #[derive(Debug, Clone, Identifiable, Queryable, QueryableByName)]

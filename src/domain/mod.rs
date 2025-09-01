@@ -4,13 +4,9 @@
 //! framework-specific details so they can be reused across crates.
 
 #[cfg(feature = "dantes")]
-pub mod benchmark;
-#[cfg(feature = "dantes")]
-pub mod crawler;
-#[cfg(feature = "dantes")]
-pub mod product;
+pub mod dantes;
 
 #[cfg(feature = "emailer")]
-pub mod email;
+pub mod emailer;
 
 pub mod auth;

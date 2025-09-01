@@ -1,7 +1,9 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
 
-use crate::domain::benchmark::{Benchmark as DomainBenchmark, NewBenchmark as DomainNewBenchmark};
+use crate::domain::dantes::benchmark::{
+    Benchmark as DomainBenchmark, NewBenchmark as DomainNewBenchmark,
+};
 
 /// Diesel model representing a row in the `benchmarks` table.
 #[derive(Debug, Clone, Identifiable, Queryable)]
