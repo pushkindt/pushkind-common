@@ -12,3 +12,5 @@ pub mod product;
 
 #[cfg(feature = "emailer")]
 pub mod email;
+
+pub mod auth;
