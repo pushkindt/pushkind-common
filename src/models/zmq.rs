@@ -32,8 +32,8 @@ pub mod emailer {
 
     use serde::{Deserialize, Serialize};
 
+    use crate::domain::auth::AuthenticatedUser;
     use crate::domain::email::NewEmail;
-    use crate::models::auth::AuthenticatedUser;
 
     #[derive(Serialize, Deserialize)]
     pub enum ZMQSendEmailMessage {

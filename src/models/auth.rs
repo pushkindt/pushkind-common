@@ -5,20 +5,9 @@ use actix_web::error::{ErrorInternalServerError, ErrorUnauthorized};
 use actix_web::{Error, FromRequest, HttpRequest, dev::Payload, web::Data};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, encode};
-use serde::{Deserialize, Serialize};
 
+use crate::domain::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
-
-/// Claims representing an authenticated user stored inside a JWT.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct AuthenticatedUser {
-    pub sub: String, // subject (user ID or UUID)
-    pub email: String,
-    pub hub_id: i32,
-    pub name: String,
-    pub roles: Vec<String>,
-    pub exp: usize, // expiration as timestamp
-}
 
 impl AuthenticatedUser {
     /// Set the `exp` claim to the current time plus the provided number of days.

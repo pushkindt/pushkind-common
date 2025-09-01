@@ -5,7 +5,7 @@ use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
 use serde::Deserialize;
 use tera::{Context, Tera};
 
-use crate::models::auth::AuthenticatedUser;
+use crate::domain::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
 
 pub fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
