@@ -107,4 +107,6 @@ pub struct UpdateEmailRecipient {
     pub is_sent: Option<bool>,
     /// Updated reply status.
     pub replied: Option<bool>,
+    /// Optional recipient's reply
+    pub reply: Option<String>,
 }
