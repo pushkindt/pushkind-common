@@ -49,6 +49,8 @@ pub struct EmailRecipient {
     pub replied: bool,
     /// Optional recipient name at the moment of sending
     pub name: Option<String>,
+    /// Optional recipient's reply
+    pub reply: Option<String>,
 }
 
 #[derive(Serialize)]

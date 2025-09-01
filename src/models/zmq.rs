@@ -40,4 +40,11 @@ pub mod emailer {
         NewEmail(Box<(AuthenticatedUser, NewEmail)>),
         RetryEmail((i32, i32)), // (id, hub_id)
     }
+
+    #[derive(Serialize, Deserialize)]
+    pub struct ZMQReplyMessage {
+        pub hub_id: i32,
+        pub email: String,
+        pub message: String,
+    }
 }
