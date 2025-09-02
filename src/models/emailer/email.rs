@@ -4,6 +4,7 @@ use serde::Serialize;
 
 use crate::domain::emailer::email::{
     Email as DomainEmail, EmailRecipient as DomainEmailRecipient, NewEmail as DomainNewEmail,
+    UpdateEmailRecipient as DomainUpdateEmailRecipient,
 };
 use crate::models::emailer::hub::Hub;
 
@@ -66,6 +67,16 @@ pub struct NewEmailRecipient<'a> {
     pub name: Option<&'a str>,
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = crate::schema::emailer::email_recipients)]
+struct UpdateEmailRecipient<'a> {
+    opened: Option<bool>,
+    is_sent: Option<bool>,
+    replied: Option<bool>,
+    reply: Option<&'a str>,
+    updated_at: Option<NaiveDateTime>,
+}
+
 impl From<Email> for DomainEmail {
     fn from(value: Email) -> Self {
         Self {
@@ -112,6 +123,18 @@ impl<'a> From<&'a DomainNewEmail> for NewEmail<'a> {
             attachment_name: value.attachment_name.as_deref(),
             attachment_mime: value.attachment_mime.as_deref(),
             hub_id: value.hub_id,
+        }
+    }
+}
+
+impl<'a> From<&'a DomainUpdateEmailRecipient> for UpdateEmailRecipient<'a> {
+    fn from(value: &'a DomainUpdateEmailRecipient) -> Self {
+        Self {
+            opened: value.opened,
+            is_sent: value.is_sent,
+            replied: value.replied,
+            reply: value.reply.as_deref(),
+            updated_at: Some(chrono::Utc::now().naive_utc()),
         }
     }
 }
