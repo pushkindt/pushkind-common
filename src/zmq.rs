@@ -104,6 +104,8 @@ impl ZmqSender {
         let warmup_ms = opts.warmup_ms;
 
         thread::spawn(move || {
+            // Keep the context alive for the socket's lifetime.
+            let _ctx = ctx;
             if warmup_ms > 0 {
                 thread::sleep(Duration::from_millis(warmup_ms));
             }
