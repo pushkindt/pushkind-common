@@ -18,7 +18,7 @@ actix = [
 ]
 db = ["diesel", "log", "thiserror"]
 dantes = ["db", "chrono"]
-emailer = ["chrono"]
+emailer = ["db", "chrono"]
 zeromq = ["zmq", "log", "serde_json", "tokio", "thiserror"]
 
 [dependencies]
