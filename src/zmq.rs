@@ -63,38 +63,49 @@ pub struct ZmqSender {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum SendError {
+pub enum ZmqSenderError {
     #[error("serialize error: {0}")]
     Serialize(#[from] serde_json::Error),
     #[error("queue is full")]
     QueueFull,
     #[error("sender thread is closed")]
     ChannelClosed,
+    #[error("create ZMQ socket: {0}")]
+    SocketCreate(zmq::Error),
+    #[error("connect {endpoint} failed: {source}")]
+    Connect {
+        endpoint: String,
+        source: zmq::Error,
+    },
 }
 
 impl ZmqSender {
     /// Spawn a dedicated thread that owns the ZeroMQ socket.
-    pub fn start(opts: ZmqSenderOptions) -> Self {
+    pub fn start(opts: ZmqSenderOptions) -> Result<Self, ZmqSenderError> {
         let (tx, mut rx) = mpsc::channel::<Envelope>(opts.queue_capacity);
 
+        let ctx = zmq::Context::new();
+        let ty = match opts.kind {
+            SocketKind::Pub => zmq::PUB,
+            SocketKind::Push => zmq::PUSH,
+        };
+        let sock = ctx.socket(ty).map_err(ZmqSenderError::SocketCreate)?;
+
+        // Reasonable defaults
+        sock.set_sndhwm(opts.sndhwm).ok();
+        sock.set_linger(opts.linger_ms).ok();
+        sock.set_immediate(opts.immediate).ok();
+
+        let endpoint = opts.endpoint.clone();
+        sock.connect(&endpoint)
+            .map_err(|source| ZmqSenderError::Connect { endpoint, source })?;
+
+        let kind = opts.kind;
+        let warmup_ms = opts.warmup_ms;
+
         thread::spawn(move || {
-            let ctx = zmq::Context::new();
-            let ty = match opts.kind {
-                SocketKind::Pub => zmq::PUB,
-                SocketKind::Push => zmq::PUSH,
-            };
-            let sock = ctx.socket(ty).expect("create ZMQ socket");
-
-            // Reasonable defaults
-            sock.set_sndhwm(opts.sndhwm).ok();
-            sock.set_linger(opts.linger_ms).ok();
-            sock.set_immediate(opts.immediate).ok();
-
-            sock.connect(&opts.endpoint)
-                .unwrap_or_else(|e| panic!("connect {} failed: {e}", opts.endpoint));
-
-            if opts.warmup_ms > 0 {
-                thread::sleep(Duration::from_millis(opts.warmup_ms));
+            if warmup_ms > 0 {
+                thread::sleep(Duration::from_millis(warmup_ms));
             }
 
             while let Some(env) = rx.blocking_recv() {
@@ -104,7 +115,7 @@ impl ZmqSender {
                 };
                 if let Err(e) = res {
                     // You can swap for `log::error!` if you prefer structured logging here.
-                    log::error!("[ZmqSender {:?}] send error: {e}", opts.kind);
+                    log::error!("[ZmqSender {:?}] send error: {e}", kind);
                     // Tiny backoff prevents hot-looping on repeated failure
                     thread::sleep(Duration::from_millis(50));
                 }
@@ -112,29 +123,29 @@ impl ZmqSender {
             // Channel closed => exit; linger=0 makes teardown fast.
         });
 
-        Self { tx }
+        Ok(Self { tx })
     }
 
     /// Send raw bytes (awaits if the queue is full).
-    pub async fn send_bytes(&self, bytes: Vec<u8>) -> Result<(), SendError> {
+    pub async fn send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError> {
         self.tx
             .send(Envelope::Bytes(bytes))
             .await
-            .map_err(|_| SendError::ChannelClosed)
+            .map_err(|_| ZmqSenderError::ChannelClosed)
     }
 
     /// Try to send raw bytes (fails fast if the queue is full).
-    pub fn try_send_bytes(&self, bytes: Vec<u8>) -> Result<(), SendError> {
+    pub fn try_send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError> {
         self.tx
             .try_send(Envelope::Bytes(bytes))
             .map_err(|e| match e {
-                mpsc::error::TrySendError::Full(_) => SendError::QueueFull,
-                mpsc::error::TrySendError::Closed(_) => SendError::ChannelClosed,
+                mpsc::error::TrySendError::Full(_) => ZmqSenderError::QueueFull,
+                mpsc::error::TrySendError::Closed(_) => ZmqSenderError::ChannelClosed,
             })
     }
 
     /// Convenience: serialize JSON and send (single-frame).
-    pub async fn send_json<T: Serialize>(&self, v: &T) -> Result<(), SendError> {
+    pub async fn send_json<T: Serialize>(&self, v: &T) -> Result<(), ZmqSenderError> {
         let bytes = serde_json::to_vec(v)?;
         self.send_bytes(bytes).await
     }
@@ -145,12 +156,12 @@ impl ZmqSender {
         &self,
         topic: impl Into<Vec<u8>>,
         v: &T,
-    ) -> Result<(), SendError> {
+    ) -> Result<(), ZmqSenderError> {
         let payload = serde_json::to_vec(v)?;
         let frames = vec![topic.into(), payload];
         self.tx
             .send(Envelope::Multipart(frames))
             .await
-            .map_err(|_| SendError::ChannelClosed)
+            .map_err(|_| ZmqSenderError::ChannelClosed)
     }
 }
