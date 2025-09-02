@@ -6,4 +6,5 @@ pub mod config;
 #[cfg(feature = "dantes")]
 pub mod dantes;
 
-pub mod zmq;
+#[cfg(feature = "emailer")]
+pub mod emailer;
