@@ -2,11 +2,13 @@ use chrono::{NaiveDateTime, Utc};
 use diesel::prelude::*;
 use serde::Serialize;
 
+use crate::db::DbConnection;
 use crate::domain::emailer::email::{
     Email as DomainEmail, EmailRecipient as DomainEmailRecipient, NewEmail as DomainNewEmail,
     UpdateEmailRecipient as DomainUpdateEmailRecipient,
 };
 use crate::models::emailer::hub::Hub;
+use crate::repository::errors::RepositoryResult;
 
 #[derive(Queryable, Selectable, Serialize, Identifiable, Associations, QueryableByName)]
 #[diesel(belongs_to(Hub, foreign_key = hub_id))]
@@ -25,6 +27,40 @@ pub struct Email {
     pub num_opened: i32,
     pub num_replied: i32,
     pub hub_id: i32,
+}
+
+impl Email {
+    pub fn recalc_email_stats(conn: &mut DbConnection, email_id: i32) -> RepositoryResult<()> {
+        use crate::schema::emailer::{email_recipients, emails};
+
+        let num_sent = email_recipients::table
+            .filter(email_recipients::email_id.eq(email_id))
+            .filter(email_recipients::is_sent.eq(true))
+            .count()
+            .get_result::<i64>(conn)? as i32;
+
+        let num_opened = email_recipients::table
+            .filter(email_recipients::email_id.eq(email_id))
+            .filter(email_recipients::opened.eq(true))
+            .count()
+            .get_result::<i64>(conn)? as i32;
+
+        let num_replied = email_recipients::table
+            .filter(email_recipients::email_id.eq(email_id))
+            .filter(email_recipients::replied.eq(true))
+            .count()
+            .get_result::<i64>(conn)? as i32;
+
+        diesel::update(emails::table.filter(emails::id.eq(email_id)))
+            .set((
+                emails::num_sent.eq(num_sent),
+                emails::num_opened.eq(num_opened),
+                emails::num_replied.eq(num_replied),
+            ))
+            .execute(conn)?;
+
+        Ok(())
+    }
 }
 
 #[derive(Insertable)]
@@ -69,7 +105,7 @@ pub struct NewEmailRecipient<'a> {
 
 #[derive(AsChangeset)]
 #[diesel(table_name = crate::schema::emailer::email_recipients)]
-struct UpdateEmailRecipient<'a> {
+pub struct UpdateEmailRecipient<'a> {
     opened: Option<bool>,
     is_sent: Option<bool>,
     replied: Option<bool>,
