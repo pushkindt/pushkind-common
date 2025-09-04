@@ -93,9 +93,6 @@ pub struct NewEmail {
     pub hub_id: i32,
     /// List of recipient email addresses.
     pub recipients: Vec<NewEmailRecipient>,
-    /// Optional email template to use for this email (It has higher priority
-    /// than the hub's one).
-    pub email_template: Option<String>,
 }
 
 /// Counters used to update email statistics.
