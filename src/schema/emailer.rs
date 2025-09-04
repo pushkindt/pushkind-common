@@ -9,8 +9,9 @@ diesel::table! {
         updated_at -> Timestamp,
         is_sent -> Bool,
         replied -> Bool,
-        fields -> Nullable<Text>,
         reply -> Nullable<Text>,
+        name -> Text,
+        fields -> Text,
     }
 }
 
