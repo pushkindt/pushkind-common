@@ -87,7 +87,7 @@ pub struct EmailRecipient {
     pub updated_at: NaiveDateTime,
     pub is_sent: bool,
     pub replied: bool,
-    pub name: Option<String>,
+    pub fields: Option<String>,
     pub reply: Option<String>,
 }
 
@@ -100,7 +100,7 @@ pub struct NewEmailRecipient<'a> {
     pub updated_at: NaiveDateTime,
     pub is_sent: bool,
     pub replied: bool,
-    pub name: Option<&'a str>,
+    pub fields: Option<&'a str>,
 }
 
 #[derive(AsChangeset)]
@@ -142,7 +142,7 @@ impl From<EmailRecipient> for DomainEmailRecipient {
             updated_at: value.updated_at,
             is_sent: value.is_sent,
             replied: value.replied,
-            name: value.name,
+            fields: value.fields,
             reply: value.reply,
         }
     }
