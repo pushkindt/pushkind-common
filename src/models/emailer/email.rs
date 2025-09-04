@@ -87,8 +87,9 @@ pub struct EmailRecipient {
     pub updated_at: NaiveDateTime,
     pub is_sent: bool,
     pub replied: bool,
-    pub fields: Option<String>,
     pub reply: Option<String>,
+    pub name: String,
+    pub fields: String,
 }
 
 #[derive(Insertable)]
@@ -100,7 +101,8 @@ pub struct NewEmailRecipient<'a> {
     pub updated_at: NaiveDateTime,
     pub is_sent: bool,
     pub replied: bool,
-    pub fields: Option<&'a str>,
+    pub name: &'a str,
+    pub fields: &'a str,
 }
 
 #[derive(AsChangeset)]
@@ -142,8 +144,9 @@ impl From<EmailRecipient> for DomainEmailRecipient {
             updated_at: value.updated_at,
             is_sent: value.is_sent,
             replied: value.replied,
-            fields: value.fields,
+            name: value.name,
             reply: value.reply,
+            fields: serde_json::from_str(&value.fields).unwrap_or_default(),
         }
     }
 }

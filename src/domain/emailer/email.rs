@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
@@ -47,10 +49,12 @@ pub struct EmailRecipient {
     pub is_sent: bool,
     /// Whether the recipient replied.
     pub replied: bool,
-    /// Optional recipient JSON-encoded fields at the moment of sending
-    pub fields: Option<String>,
     /// Optional recipient's reply
     pub reply: Option<String>,
+    /// Recipient's name at the moment of sending
+    pub name: String,
+    /// Recipient's JSON-encoded fields at the moment of sending
+    pub fields: HashMap<String, String>,
 }
 
 #[derive(Serialize)]
@@ -66,8 +70,10 @@ pub struct EmailWithRecipients {
 pub struct NewEmailRecipient {
     /// Email address of the recipient.
     pub address: String,
-    /// Optional recipient name.
-    pub fields: Option<String>,
+    /// Recipient's name
+    pub name: String,
+    /// Optional recipient fields.
+    pub fields: HashMap<String, String>,
 }
 
 #[derive(Serialize, Deserialize)]
