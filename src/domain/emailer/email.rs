@@ -47,8 +47,8 @@ pub struct EmailRecipient {
     pub is_sent: bool,
     /// Whether the recipient replied.
     pub replied: bool,
-    /// Optional recipient name at the moment of sending
-    pub name: Option<String>,
+    /// Optional recipient JSON-encoded fields at the moment of sending
+    pub fields: Option<String>,
     /// Optional recipient's reply
     pub reply: Option<String>,
 }
@@ -67,7 +67,7 @@ pub struct NewEmailRecipient {
     /// Email address of the recipient.
     pub address: String,
     /// Optional recipient name.
-    pub name: Option<String>,
+    pub fields: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -87,6 +87,9 @@ pub struct NewEmail {
     pub hub_id: i32,
     /// List of recipient email addresses.
     pub recipients: Vec<NewEmailRecipient>,
+    /// Optional email template to use for this email (It has higher priority
+    /// than the hub's one).
+    pub email_template: Option<String>,
 }
 
 /// Counters used to update email statistics.
