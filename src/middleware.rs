@@ -14,6 +14,7 @@ use actix_web::{
 };
 use futures_util::future::LocalBoxFuture;
 use std::future::{Ready, ready};
+use url::{Url, form_urlencoded};
 
 use crate::models::config::CommonServerConfig;
 
@@ -77,6 +78,14 @@ where
             }
         };
 
+        // Record the full incoming URL before moving the request
+        let incoming_url = format!(
+            "{}://{}{}",
+            req.connection_info().scheme(),
+            req.connection_info().host(),
+            req.uri()
+        );
+
         let fut = self.service.call(req);
 
         Box::pin(async move {
@@ -84,8 +93,35 @@ where
 
             if res.status() == StatusCode::UNAUTHORIZED {
                 let (req_parts, _) = res.into_parts();
+
+                let redirect_url = if let Ok(mut url) = Url::parse(&auth_service_url) {
+                    url.query_pairs_mut().append_pair("next", &incoming_url);
+                    url.to_string()
+                } else if auth_service_url.contains("://") {
+                    return Err(actix_web::error::ErrorInternalServerError(
+                        "Invalid auth service URL",
+                    ));
+                } else {
+                    let encoded_next = form_urlencoded::Serializer::new(String::new())
+                        .append_pair("next", &incoming_url)
+                        .finish();
+
+                    let (base, fragment) = auth_service_url
+                        .split_once('#')
+                        .map(|(b, f)| (b, Some(f)))
+                        .unwrap_or_else(|| (auth_service_url.as_str(), None));
+
+                    let separator = if base.contains('?') { '&' } else { '?' };
+                    let mut redirect = format!("{base}{separator}{encoded_next}");
+                    if let Some(fragment) = fragment {
+                        redirect.push('#');
+                        redirect.push_str(fragment);
+                    }
+                    redirect
+                };
+
                 let redirect_response = HttpResponse::SeeOther()
-                    .insert_header((actix_web::http::header::LOCATION, auth_service_url))
+                    .insert_header((actix_web::http::header::LOCATION, redirect_url))
                     .finish()
                     .map_into_right_body();
 
