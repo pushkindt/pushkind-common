@@ -14,7 +14,7 @@ use actix_web::{
 };
 use futures_util::future::LocalBoxFuture;
 use std::future::{Ready, ready};
-use url::Url;
+use url::{Url, form_urlencoded};
 
 use crate::models::config::CommonServerConfig;
 
@@ -94,15 +94,22 @@ where
             if res.status() == StatusCode::UNAUTHORIZED {
                 let (req_parts, _) = res.into_parts();
 
-                let redirect_url = match Url::parse(&auth_service_url) {
-                    Ok(mut url) => {
-                        url.query_pairs_mut().append_pair("next", &incoming_url);
-                        url.to_string()
-                    }
-                    Err(_) => {
-                        return Err(actix_web::error::ErrorInternalServerError(
-                            "Invalid auth service URL",
-                        ));
+                let redirect_url = if let Ok(mut url) = Url::parse(&auth_service_url) {
+                    url.query_pairs_mut().append_pair("next", &incoming_url);
+                    url.to_string()
+                } else if auth_service_url.contains("://") {
+                    return Err(actix_web::error::ErrorInternalServerError(
+                        "Invalid auth service URL",
+                    ));
+                } else {
+                    let encoded_next = form_urlencoded::Serializer::new(String::new())
+                        .append_pair("next", &incoming_url)
+                        .finish();
+
+                    if auth_service_url.contains('?') {
+                        format!("{}&{}", auth_service_url, encoded_next)
+                    } else {
+                        format!("{}?{}", auth_service_url, encoded_next)
                     }
                 };
 
