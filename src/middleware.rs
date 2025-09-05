@@ -14,6 +14,7 @@ use actix_web::{
 };
 use futures_util::future::LocalBoxFuture;
 use std::future::{Ready, ready};
+use url::Url;
 
 use crate::models::config::CommonServerConfig;
 
@@ -77,6 +78,14 @@ where
             }
         };
 
+        // Record the full incoming URL before moving the request
+        let incoming_url = format!(
+            "{}://{}{}",
+            req.connection_info().scheme(),
+            req.connection_info().host(),
+            req.uri()
+        );
+
         let fut = self.service.call(req);
 
         Box::pin(async move {
@@ -84,8 +93,21 @@ where
 
             if res.status() == StatusCode::UNAUTHORIZED {
                 let (req_parts, _) = res.into_parts();
+
+                let redirect_url = match Url::parse(&auth_service_url) {
+                    Ok(mut url) => {
+                        url.query_pairs_mut().append_pair("next", &incoming_url);
+                        url.to_string()
+                    }
+                    Err(_) => {
+                        return Err(actix_web::error::ErrorInternalServerError(
+                            "Invalid auth service URL",
+                        ));
+                    }
+                };
+
                 let redirect_response = HttpResponse::SeeOther()
-                    .insert_header((actix_web::http::header::LOCATION, auth_service_url))
+                    .insert_header((actix_web::http::header::LOCATION, redirect_url))
                     .finish()
                     .map_into_right_body();
 

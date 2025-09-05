@@ -28,7 +28,7 @@ async fn redirects_unauthorized_to_signin() {
     assert_eq!(resp.status(), StatusCode::SEE_OTHER);
     assert_eq!(
         resp.headers().get(header::LOCATION).unwrap(),
-        "http://auth.test.me/"
+        "http://auth.test.me/?next=http%3A%2F%2Flocalhost%3A8080%2F"
     );
 }
 
