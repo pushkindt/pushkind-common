@@ -106,11 +106,18 @@ where
                         .append_pair("next", &incoming_url)
                         .finish();
 
-                    if auth_service_url.contains('?') {
-                        format!("{}&{}", auth_service_url, encoded_next)
-                    } else {
-                        format!("{}?{}", auth_service_url, encoded_next)
+                    let (base, fragment) = auth_service_url
+                        .split_once('#')
+                        .map(|(b, f)| (b, Some(f)))
+                        .unwrap_or_else(|| (auth_service_url.as_str(), None));
+
+                    let separator = if base.contains('?') { '&' } else { '?' };
+                    let mut redirect = format!("{base}{separator}{encoded_next}");
+                    if let Some(fragment) = fragment {
+                        redirect.push('#');
+                        redirect.push_str(fragment);
                     }
+                    redirect
                 };
 
                 let redirect_response = HttpResponse::SeeOther()
