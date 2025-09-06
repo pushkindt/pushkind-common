@@ -11,19 +11,16 @@ use crate::models::config::CommonServerConfig;
 
 impl AuthenticatedUser {
     /// Set the `exp` claim to the current time plus the provided number of days.
+    /// or leave it as is in case of a failure
     pub fn set_expiration(&mut self, days: i64) {
-        let expiration = Utc::now()
-            .checked_add_signed(Duration::days(days))
-            .expect("valid timestamp")
-            .timestamp() as usize;
-        self.exp = expiration;
+        self.exp = match Utc::now().checked_add_signed(Duration::days(days)) {
+            Some(expiration) => expiration.timestamp() as usize,
+            None => self.exp,
+        }
     }
 
     /// Encode this user into a JWT using the given secret key.
-    ///
-    /// The expiration is automatically set to 7 days from now.
-    pub fn to_jwt(&mut self, secret: &str) -> Result<String, jsonwebtoken::errors::Error> {
-        self.set_expiration(7);
+    pub fn to_jwt(&self, secret: &str) -> Result<String, jsonwebtoken::errors::Error> {
         encode(
             &Header::default(),
             self,
@@ -93,6 +90,7 @@ mod tests {
     fn jwt_round_trip() {
         let secret = "secret";
         let mut user = sample_user();
+        user.set_expiration(1);
         let token = user.to_jwt(secret).unwrap();
         let decoded = decode::<AuthenticatedUser>(
             &token,
