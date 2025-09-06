@@ -51,16 +51,41 @@ pub struct RedirectUnauthorizedMiddleware<S> {
 }
 
 fn build_redirect_url(auth_service_url: &str, incoming_url: &str) -> Result<String, Error> {
+    // Determine what to pass as the `next` value:
+    // if the incoming URL already contains a `next` query parameter, use its value;
+    // otherwise, use the entire incoming URL.
+    let next_value = match Url::parse(incoming_url) {
+        Ok(url) => url
+            .query_pairs()
+            .find(|(k, _)| k == "next")
+            .map(|(_, v)| v.into_owned())
+            .unwrap_or_else(|| incoming_url.to_string()),
+        Err(_) => {
+            // Fallback for cases where `incoming_url` can't be parsed as absolute URL.
+            // Try to manually parse query params.
+            let base = incoming_url
+                .split_once('#')
+                .map(|(b, _)| b)
+                .unwrap_or(incoming_url);
+            let maybe_next = base.split_once('?').and_then(|(_, q)| {
+                form_urlencoded::parse(q.as_bytes())
+                    .find(|(k, _)| k == "next")
+                    .map(|(_, v)| v.into_owned())
+            });
+            maybe_next.unwrap_or_else(|| incoming_url.to_string())
+        }
+    };
+
     match Url::parse(auth_service_url) {
         Ok(mut url) => {
             if !url.query_pairs().any(|(k, _)| k == "next") {
-                url.query_pairs_mut().append_pair("next", incoming_url);
+                url.query_pairs_mut().append_pair("next", &next_value);
             }
             Ok(url.to_string())
         }
         Err(url::ParseError::RelativeUrlWithoutBase) => {
             let encoded_next = form_urlencoded::Serializer::new(String::new())
-                .append_pair("next", incoming_url)
+                .append_pair("next", &next_value)
                 .finish();
 
             let (base, fragment) = auth_service_url
