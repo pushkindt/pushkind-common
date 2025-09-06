@@ -151,3 +151,59 @@ async fn success_response_passes_through() {
 
     assert_eq!(resp.status(), StatusCode::OK);
 }
+
+#[actix_web::test]
+async fn uses_inner_next_value_for_absolute_auth_url() {
+    let server_config = CommonServerConfig {
+        secret: "secret".to_string(),
+        auth_service_url: "http://auth.test.me/".to_string(),
+    };
+
+    let app = test::init_service(
+        App::new()
+            .wrap(RedirectUnauthorized)
+            .app_data(web::Data::new(server_config.clone()))
+            .default_service(web::to(|| async { HttpResponse::Unauthorized().finish() })),
+    )
+    .await;
+
+    // Incoming URL contains its own `next` parameter
+    let req = test::TestRequest::default()
+        .uri("/path?x=1&next=https%3A%2F%2Fexample.com%2Ftarget%3Fa%3D1%26b%3D2&y=2")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), StatusCode::SEE_OTHER);
+    assert_eq!(
+        resp.headers().get(header::LOCATION).unwrap(),
+        "http://auth.test.me/?next=https%3A%2F%2Fexample.com%2Ftarget%3Fa%3D1%26b%3D2",
+    );
+}
+
+#[actix_web::test]
+async fn uses_inner_next_value_for_relative_auth_url() {
+    let server_config = CommonServerConfig {
+        secret: "secret".to_string(),
+        auth_service_url: "/auth/signin".to_string(),
+    };
+
+    let app = test::init_service(
+        App::new()
+            .wrap(RedirectUnauthorized)
+            .app_data(web::Data::new(server_config.clone()))
+            .default_service(web::to(|| async { HttpResponse::Unauthorized().finish() })),
+    )
+    .await;
+
+    // Incoming URL contains its own `next` parameter
+    let req = test::TestRequest::default()
+        .uri("/path?next=https%3A%2F%2Fexample.com%2Fwelcome")
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+
+    assert_eq!(resp.status(), StatusCode::SEE_OTHER);
+    assert_eq!(
+        resp.headers().get(header::LOCATION).unwrap(),
+        "/auth/signin?next=https%3A%2F%2Fexample.com%2Fwelcome",
+    );
+}
