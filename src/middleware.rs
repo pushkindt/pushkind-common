@@ -50,6 +50,62 @@ pub struct RedirectUnauthorizedMiddleware<S> {
     service: S,
 }
 
+fn build_redirect_url(auth_service_url: &str, incoming_url: &str) -> Result<String, Error> {
+    match Url::parse(auth_service_url) {
+        Ok(mut url) => {
+            if !url.query_pairs().any(|(k, _)| k == "next") {
+                url.query_pairs_mut().append_pair("next", incoming_url);
+            }
+            Ok(url.to_string())
+        }
+        Err(url::ParseError::RelativeUrlWithoutBase) => {
+            let encoded_next = form_urlencoded::Serializer::new(String::new())
+                .append_pair("next", incoming_url)
+                .finish();
+
+            let (base, fragment) = auth_service_url
+                .split_once('#')
+                .map(|(b, f)| (b, Some(f)))
+                .unwrap_or_else(|| (auth_service_url, None));
+
+            let (path, query) = base
+                .split_once('?')
+                .map(|(p, q)| (p, Some(q)))
+                .unwrap_or_else(|| (base, None));
+
+            let mut redirect = String::from(path);
+
+            match query {
+                Some(q) => {
+                    let has_next = form_urlencoded::parse(q.as_bytes()).any(|(k, _)| k == "next");
+                    redirect.push('?');
+                    redirect.push_str(q);
+                    if !has_next {
+                        if !q.is_empty() {
+                            redirect.push('&');
+                        }
+                        redirect.push_str(&encoded_next);
+                    }
+                }
+                None => {
+                    redirect.push('?');
+                    redirect.push_str(&encoded_next);
+                }
+            }
+
+            if let Some(fragment) = fragment {
+                redirect.push('#');
+                redirect.push_str(fragment);
+            }
+
+            Ok(redirect)
+        }
+        Err(_) => Err(actix_web::error::ErrorInternalServerError(
+            "Invalid auth service URL",
+        )),
+    }
+}
+
 /// Calls the wrapped service and redirects to the authentication service if
 /// a `401 Unauthorized` response is encountered.
 impl<S, B> Service<ServiceRequest> for RedirectUnauthorizedMiddleware<S>
@@ -94,31 +150,7 @@ where
             if res.status() == StatusCode::UNAUTHORIZED {
                 let (req_parts, _) = res.into_parts();
 
-                let redirect_url = if let Ok(mut url) = Url::parse(&auth_service_url) {
-                    url.query_pairs_mut().append_pair("next", &incoming_url);
-                    url.to_string()
-                } else if auth_service_url.contains("://") {
-                    return Err(actix_web::error::ErrorInternalServerError(
-                        "Invalid auth service URL",
-                    ));
-                } else {
-                    let encoded_next = form_urlencoded::Serializer::new(String::new())
-                        .append_pair("next", &incoming_url)
-                        .finish();
-
-                    let (base, fragment) = auth_service_url
-                        .split_once('#')
-                        .map(|(b, f)| (b, Some(f)))
-                        .unwrap_or_else(|| (auth_service_url.as_str(), None));
-
-                    let separator = if base.contains('?') { '&' } else { '?' };
-                    let mut redirect = format!("{base}{separator}{encoded_next}");
-                    if let Some(fragment) = fragment {
-                        redirect.push('#');
-                        redirect.push_str(fragment);
-                    }
-                    redirect
-                };
+                let redirect_url = build_redirect_url(&auth_service_url, &incoming_url)?;
 
                 let redirect_response = HttpResponse::SeeOther()
                     .insert_header((actix_web::http::header::LOCATION, redirect_url))
