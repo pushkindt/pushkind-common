@@ -22,3 +22,4 @@ pub mod zmq;
 pub mod domain;
 pub mod models;
 pub mod schema;
+pub mod services;
