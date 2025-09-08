@@ -16,15 +16,15 @@ actix = [
     "log",
     "tera",
 ]
-db = ["diesel", "log", "thiserror"]
+db = ["diesel", "log"]
 dantes = ["db", "chrono"]
 emailer = ["db", "chrono", "serde_json"]
-zeromq = ["zmq", "log", "serde_json", "tokio", "thiserror"]
+zeromq = ["zmq", "log", "serde_json", "tokio"]
 
 [dependencies]
 actix-web = { version = "4.11.0", optional = true }
 actix-identity = { version = "0.9.0", optional = true }
-chrono = { version = "0.4.41", features = ["serde"], optional = true }
+chrono = { version = "0.4.42", features = ["serde"], optional = true }
 bcrypt = { version = "0.17.1", optional = true }
 jsonwebtoken = { version = "9.3.1", optional = true }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -38,9 +38,9 @@ diesel = { version = "2.2.12", features = [
     "chrono",
     "returning_clauses_for_sqlite_3_35",
 ], optional = true }
-log = { version = "0.4.27", optional = true }
+log = { version = "0.4.28", optional = true }
 zmq = { version = "0.10.0", optional = true }
-thiserror = { version = "2.0.16", optional = true }
+thiserror = { version = "2.0.16" }
 serde_json = { version = "1.0.143", optional = true }
 tera = { version = "1.20.0", features = ["builtins"], optional = true }
 tokio = { version = "1.47.1", features = ["sync"], optional = true }
