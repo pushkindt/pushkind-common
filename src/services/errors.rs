@@ -18,7 +18,7 @@ pub enum ServiceError {
     /// Persistence layer failures.
     #[cfg(feature = "db")]
     #[error("repository error: {0}")]
-    Repository(#[from] crate::repository::errors::RepositoryError),
+    Repository(crate::repository::errors::RepositoryError),
 
     /// ZmqSenderError
     #[cfg(feature = "zeromq")]
@@ -40,3 +40,17 @@ pub enum ServiceError {
 
 /// Convenient alias for results returned from service functions.
 pub type ServiceResult<T> = Result<T, ServiceError>;
+
+// Manual From implementation for RepositoryError
+#[cfg(feature = "db")]
+impl From<crate::repository::errors::RepositoryError> for ServiceError {
+    fn from(err: crate::repository::errors::RepositoryError) -> Self {
+        match err {
+            crate::repository::errors::RepositoryError::NotFound => ServiceError::NotFound,
+            crate::repository::errors::RepositoryError::ConstraintViolation(_) => {
+                ServiceError::Conflict
+            }
+            other => ServiceError::Repository(other),
+        }
+    }
+}
