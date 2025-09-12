@@ -82,6 +82,7 @@ diesel::table! {
         created_at -> Nullable<Timestamp>,
         updated_at -> Nullable<Timestamp>,
         unsubscribed_at -> Nullable<Timestamp>,
+        fields -> Nullable<Text>,
     }
 }
 
