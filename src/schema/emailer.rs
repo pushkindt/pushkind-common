@@ -74,6 +74,47 @@ diesel::table! {
 }
 
 diesel::table! {
+    recipient_fts (rowid) {
+        rowid -> Integer,
+        name -> Nullable<Binary>,
+        email -> Nullable<Binary>,
+        fields -> Nullable<Binary>,
+        #[sql_name = "recipient_fts"]
+        recipient_fts_col -> Nullable<Binary>,
+        rank -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    recipient_fts_config (k) {
+        k -> Binary,
+        v -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    recipient_fts_data (id) {
+        id -> Nullable<Integer>,
+        block -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    recipient_fts_docsize (id) {
+        id -> Nullable<Integer>,
+        sz -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    recipient_fts_idx (segid, term) {
+        segid -> Binary,
+        term -> Binary,
+        pgno -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
     recipients (id) {
         id -> Integer,
         name -> Text,
@@ -81,8 +122,17 @@ diesel::table! {
         hub_id -> Integer,
         created_at -> Nullable<Timestamp>,
         updated_at -> Nullable<Timestamp>,
-        unsubscribed_at -> Nullable<Timestamp>,
         fields -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
+    unsubscribes (email, hub_id) {
+        email -> Text,
+        hub_id -> Integer,
+        reason -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
     }
 }
 
@@ -101,5 +151,11 @@ diesel::allow_tables_to_appear_in_same_query!(
     groups_recipients,
     hubs,
     recipient_fields,
+    recipient_fts,
+    recipient_fts_config,
+    recipient_fts_data,
+    recipient_fts_docsize,
+    recipient_fts_idx,
     recipients,
+    unsubscribes,
 );
