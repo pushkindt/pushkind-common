@@ -15,3 +15,10 @@ pub struct ZMQReplyMessage {
     pub email: String,
     pub message: String,
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct ZMQUnsubscribeMessage {
+    pub hub_id: i32,
+    pub email: String,
+    pub reason: Option<String>,
+}
