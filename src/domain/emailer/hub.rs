@@ -27,7 +27,7 @@ pub struct Hub {
     /// Template applied to outgoing emails.
     pub email_template: Option<String>,
     /// Last IMAP message ID seen by the hub.
-    pub last_imap_id: i32,
+    pub imap_last_uid: i32,
 }
 
 /// Data required to create a new [`Hub`].
