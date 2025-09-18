@@ -20,6 +20,7 @@ pub struct Hub {
     pub imap_server: Option<String>,
     pub imap_port: Option<i32>,
     pub email_template: Option<String>,
+    pub imap_last_uid: i32,
 }
 
 #[derive(Insertable)]
@@ -67,6 +68,7 @@ impl From<Hub> for DomainHub {
             imap_server: value.imap_server,
             imap_port: value.imap_port,
             email_template: value.email_template,
+            last_imap_id: value.imap_last_uid,
         }
     }
 }

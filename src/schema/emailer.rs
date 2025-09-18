@@ -62,6 +62,7 @@ diesel::table! {
         imap_server -> Nullable<Text>,
         imap_port -> Nullable<Integer>,
         email_template -> Nullable<Text>,
+        imap_last_uid -> Integer,
     }
 }
 
