@@ -68,7 +68,7 @@ impl From<Hub> for DomainHub {
             imap_server: value.imap_server,
             imap_port: value.imap_port,
             email_template: value.email_template,
-            last_imap_id: value.imap_last_uid,
+            imap_last_uid: value.imap_last_uid,
         }
     }
 }
