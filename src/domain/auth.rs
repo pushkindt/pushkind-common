@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Claims representing an authenticated user stored inside a JWT.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AuthenticatedUser {
     pub sub: String, // subject (user ID or UUID)
     pub email: String,
