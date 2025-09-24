@@ -14,6 +14,7 @@ pub struct ZMQReplyMessage {
     pub hub_id: i32,
     pub email: String,
     pub message: String,
+    pub subject: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
