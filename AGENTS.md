@@ -34,4 +34,3 @@ cargo fmt --all -- --check
 - Define error types inside their unit of fallibility
 - Document all public APIs and breaking changes
 - Always run formatting and linting before creating PRs
-
