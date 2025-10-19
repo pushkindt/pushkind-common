@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::{thread, time::Duration};
+use std::{future::Future, pin::Pin, thread, time::Duration};
 use tokio::sync::mpsc;
 use zmq;
 
@@ -56,7 +56,52 @@ enum Envelope {
     Multipart(Vec<Vec<u8>>),
 }
 
-/// Handle your routes can clone and use.
+/// Future returned by the [`ZmqSenderTrait`] trait methods.
+pub type SendFuture<'a> = Pin<Box<dyn Future<Output = Result<(), ZmqSenderError>> + Send + 'a>>;
+
+/// Abstraction over message sending, suitable for dependency injection.
+pub trait ZmqSenderTrait: Send + Sync {
+    /// Send raw bytes (awaits if the queue is full).
+    fn send_bytes<'a>(&'a self, bytes: Vec<u8>) -> SendFuture<'a>;
+
+    /// Try to send raw bytes (fails fast if the queue is full).
+    fn try_send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError>;
+
+    /// Send multipart frames (awaits if the queue is full).
+    fn send_multipart<'a>(&'a self, frames: Vec<Vec<u8>>) -> SendFuture<'a>;
+}
+
+/// Convenience helpers automatically available for all [`ZmqSenderTrait`] implementors.
+pub trait ZmqSenderExt: ZmqSenderTrait {
+    /// Convenience: serialize JSON and send (single-frame).
+    fn send_json<'a, T>(&'a self, v: &'a T) -> SendFuture<'a>
+    where
+        T: Serialize + Send + Sync + 'a,
+    {
+        Box::pin(async move {
+            let bytes = serde_json::to_vec(v).map_err(ZmqSenderError::from)?;
+            self.send_bytes(bytes).await
+        })
+    }
+
+    /// PUB-friendly helper: send a topic + JSON as multipart.
+    /// Works with PUSH too (PULL will just receive two frames).
+    fn send_topic_json<'a, T, Topic>(&'a self, topic: Topic, v: &'a T) -> SendFuture<'a>
+    where
+        T: Serialize + Send + Sync + 'a,
+        Topic: Into<Vec<u8>> + Send + 'a,
+    {
+        Box::pin(async move {
+            let payload = serde_json::to_vec(v).map_err(ZmqSenderError::from)?;
+            let frames = vec![topic.into(), payload];
+            self.send_multipart(frames).await
+        })
+    }
+}
+
+impl<T: ZmqSenderTrait + ?Sized> ZmqSenderExt for T {}
+
+/// Concrete sender backed by a dedicated thread that owns the ZeroMQ socket.
 #[derive(Clone)]
 pub struct ZmqSender {
     tx: mpsc::Sender<Envelope>,
@@ -127,17 +172,19 @@ impl ZmqSender {
 
         Ok(Self { tx })
     }
+}
 
-    /// Send raw bytes (awaits if the queue is full).
-    pub async fn send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError> {
-        self.tx
-            .send(Envelope::Bytes(bytes))
-            .await
-            .map_err(|_| ZmqSenderError::ChannelClosed)
+impl ZmqSenderTrait for ZmqSender {
+    fn send_bytes<'a>(&'a self, bytes: Vec<u8>) -> SendFuture<'a> {
+        let tx = self.tx.clone();
+        Box::pin(async move {
+            tx.send(Envelope::Bytes(bytes))
+                .await
+                .map_err(|_| ZmqSenderError::ChannelClosed)
+        })
     }
 
-    /// Try to send raw bytes (fails fast if the queue is full).
-    pub fn try_send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError> {
+    fn try_send_bytes(&self, bytes: Vec<u8>) -> Result<(), ZmqSenderError> {
         self.tx
             .try_send(Envelope::Bytes(bytes))
             .map_err(|e| match e {
@@ -146,24 +193,15 @@ impl ZmqSender {
             })
     }
 
-    /// Convenience: serialize JSON and send (single-frame).
-    pub async fn send_json<T: Serialize>(&self, v: &T) -> Result<(), ZmqSenderError> {
-        let bytes = serde_json::to_vec(v)?;
-        self.send_bytes(bytes).await
-    }
-
-    /// PUB-friendly helper: send a topic + JSON as multipart.
-    /// Works with PUSH too (PULL will just receive two frames).
-    pub async fn send_topic_json<T: Serialize>(
-        &self,
-        topic: impl Into<Vec<u8>>,
-        v: &T,
-    ) -> Result<(), ZmqSenderError> {
-        let payload = serde_json::to_vec(v)?;
-        let frames = vec![topic.into(), payload];
-        self.tx
-            .send(Envelope::Multipart(frames))
-            .await
-            .map_err(|_| ZmqSenderError::ChannelClosed)
+    fn send_multipart<'a>(&'a self, frames: Vec<Vec<u8>>) -> SendFuture<'a> {
+        let tx = self.tx.clone();
+        Box::pin(async move {
+            tx.send(Envelope::Multipart(frames))
+                .await
+                .map_err(|_| ZmqSenderError::ChannelClosed)
+        })
     }
 }
+
+/// Default threaded sender implementation used by the crate.
+pub type DefaultZmqSender = ZmqSender;
