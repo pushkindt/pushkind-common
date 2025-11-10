@@ -62,7 +62,7 @@ impl ZMQSendSmsMessage {
 
         let mut out = String::new();
         out.extend(s.by_ref().take(keep_start));
-        out.extend(std::iter::repeat('*').take(asterisk_count));
+        out.extend(std::iter::repeat_n('*', asterisk_count));
         out.extend(s.skip(asterisk_count));
         out
     }
