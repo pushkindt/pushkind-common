@@ -8,3 +8,6 @@ pub mod dantes;
 
 #[cfg(feature = "emailer")]
 pub mod emailer;
+
+#[cfg(feature = "sms")]
+pub mod sms;
