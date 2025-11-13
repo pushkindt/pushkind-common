@@ -1,3 +1,5 @@
+// @generated automatically by Diesel CLI.
+
 diesel::table! {
     benchmarks (id) {
         id -> Integer,
@@ -39,6 +41,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    product_images (id) {
+        id -> Integer,
+        product_id -> Integer,
+        url -> Text,
+    }
+}
+
+diesel::table! {
     products (id) {
         id -> Integer,
         crawler_id -> Integer,
@@ -56,8 +66,62 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    products_fts (rowid) {
+        rowid -> Integer,
+        name -> Nullable<Binary>,
+        sku -> Nullable<Binary>,
+        category -> Nullable<Binary>,
+        description -> Nullable<Binary>,
+        #[sql_name = "products_fts"]
+        products_fts_col -> Nullable<Binary>,
+        rank -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    products_fts_config (k) {
+        k -> Binary,
+        v -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    products_fts_data (id) {
+        id -> Nullable<Integer>,
+        block -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    products_fts_docsize (id) {
+        id -> Nullable<Integer>,
+        sz -> Nullable<Binary>,
+    }
+}
+
+diesel::table! {
+    products_fts_idx (segid, term) {
+        segid -> Binary,
+        term -> Binary,
+        pgno -> Nullable<Binary>,
+    }
+}
+
 diesel::joinable!(product_benchmark -> benchmarks (benchmark_id));
 diesel::joinable!(product_benchmark -> products (product_id));
+diesel::joinable!(product_images -> products (product_id));
 diesel::joinable!(products -> crawlers (crawler_id));
 
-diesel::allow_tables_to_appear_in_same_query!(benchmarks, crawlers, product_benchmark, products,);
+diesel::allow_tables_to_appear_in_same_query!(
+    benchmarks,
+    crawlers,
+    product_benchmark,
+    product_images,
+    products,
+    products_fts,
+    products_fts_config,
+    products_fts_data,
+    products_fts_docsize,
+    products_fts_idx,
+);

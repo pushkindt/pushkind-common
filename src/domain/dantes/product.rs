@@ -17,6 +17,7 @@ pub struct Product {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub embedding: Option<Vec<u8>>,
+    pub images: Vec<String>,
 }
 
 /// Information required to create a new [`Product`].
@@ -31,4 +32,5 @@ pub struct NewProduct {
     pub amount: Option<f64>,
     pub description: Option<String>,
     pub url: String,
+    pub images: Vec<String>,
 }
