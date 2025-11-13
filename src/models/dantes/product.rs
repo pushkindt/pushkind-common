@@ -54,6 +54,7 @@ impl From<Product> for DomainProduct {
             created_at: product.created_at,
             updated_at: product.updated_at,
             embedding: product.embedding,
+            images: vec![],
         }
     }
 }
