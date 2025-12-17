@@ -46,3 +46,6 @@ tera = { version = "1.20.1", features = ["builtins"], optional = true }
 tokio = { version = "1.48.0", features = ["sync"], optional = true }
 url = "2.5.7"
 phonenumber = { version = "0.3.7", optional = true }
+
+[dev-dependencies]
+tempfile = "3.13.0"
