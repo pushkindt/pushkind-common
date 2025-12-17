@@ -36,6 +36,10 @@ pub enum ServiceError {
     /// An unexpected internal error occurred.
     #[error("internal error")]
     Internal,
+
+    /// Type constraint violation.
+    #[error("type constraint violation: {0}")]
+    TypeConstraint(String),
 }
 
 /// Convenient alias for results returned from service functions.
