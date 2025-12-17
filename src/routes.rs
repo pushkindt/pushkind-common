@@ -1,12 +1,13 @@
 use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, get, post, web};
-use actix_web_flash_messages::{FlashMessage, IncomingFlashMessages, Level};
+use actix_web_flash_messages::{IncomingFlashMessages, Level};
 use serde::Deserialize;
 use tera::{Context, Tera};
 
 use crate::domain::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
+use crate::services::errors::{ServiceError, ServiceResult};
 
 pub fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
@@ -54,20 +55,11 @@ where
 }
 
 /// Ensure that the authenticated user has the required role.
-///
-/// If the role is missing a flash error message is queued and the caller
-/// receives an `Err` containing a redirect response to either the provided URL
-/// or `"/"`.
-pub fn ensure_role(
-    user: &AuthenticatedUser,
-    role: &str,
-    redirect_url: Option<&str>,
-) -> Result<(), HttpResponse> {
+pub fn ensure_role(user: &AuthenticatedUser, role: &str) -> ServiceResult<()> {
     if check_role(role, &user.roles) {
         Ok(())
     } else {
-        FlashMessage::error("Недостаточно прав.").send();
-        Err(redirect(redirect_url.unwrap_or("/")))
+        Err(ServiceError::Unauthorized)
     }
 }
 
@@ -130,13 +122,10 @@ pub async fn not_assigned(
 mod tests {
     use super::*;
     use actix_web::body::to_bytes;
-    use actix_web::cookie::Key;
     use actix_web::http::StatusCode;
-    use actix_web::{App, HttpResponse, http::header, test, web};
-    use actix_web_flash_messages::FlashMessagesFramework;
+    use actix_web::http::header;
+    use actix_web::http::header::HeaderValue;
     use actix_web_flash_messages::Level;
-    use actix_web_flash_messages::storage::CookieMessageStore;
-    use actix_web_flash_messages::storage::FlashMessageStore;
     use tera::{Context, Tera};
 
     fn sample_user(roles: Vec<&str>) -> AuthenticatedUser {
@@ -160,7 +149,10 @@ mod tests {
     async fn redirect_sets_location_header() {
         let resp = redirect("/target");
         assert_eq!(resp.status(), StatusCode::SEE_OTHER);
-        assert_eq!(resp.headers().get(header::LOCATION).unwrap(), "/target");
+        assert_eq!(
+            resp.headers().get(header::LOCATION),
+            Some(&HeaderValue::from_static("/target"))
+        );
     }
 
     #[actix_web::test]
@@ -175,61 +167,24 @@ mod tests {
     #[actix_web::test]
     async fn ensure_role_allows_matching_role() {
         let user = sample_user(vec!["admin"]);
-        let result = ensure_role(&user, "admin", Some("/"));
-        assert!(result.is_ok());
+        assert!(ensure_role(&user, "admin").is_ok());
     }
 
     #[actix_web::test]
     async fn ensure_role_denies_missing_role() {
-        async fn handler(user: AuthenticatedUser) -> HttpResponse {
-            match ensure_role(&user, "admin", Some("/login")) {
-                Ok(()) => HttpResponse::Ok().finish(),
-                Err(resp) => resp,
-            }
-        }
-
-        let key = Key::generate();
-        let framework_store = CookieMessageStore::builder(key.clone()).build();
-        let framework = FlashMessagesFramework::builder(framework_store).build();
-
-        let app = test::init_service(
-            App::new()
-                .wrap(framework)
-                .default_service(web::to(move || handler(sample_user(vec!["user"])))),
-        )
-        .await;
-
-        let decode_store = CookieMessageStore::builder(key).build();
-
-        let req = test::TestRequest::default().to_request();
-        let resp = test::call_service(&app, req).await;
-
-        assert_eq!(resp.status(), StatusCode::SEE_OTHER);
-        assert_eq!(resp.headers().get(header::LOCATION).unwrap(), "/login");
-
-        let flash_cookie = resp
-            .response()
-            .cookies()
-            .find(|c| c.name() == "_flash")
-            .expect("flash cookie not set");
-
-        assert!(!flash_cookie.value().is_empty());
-
-        let req_with_cookie = test::TestRequest::default()
-            .cookie(flash_cookie.clone())
-            .to_http_request();
-
-        let messages = decode_store.load(&req_with_cookie).unwrap();
-        assert_eq!(messages.len(), 1);
-        let message = &messages[0];
-        assert_eq!(message.content(), "Недостаточно прав.");
-        assert_eq!(message.level(), Level::Error);
+        let user = sample_user(vec!["user"]);
+        assert!(matches!(
+            ensure_role(&user, "admin"),
+            Err(ServiceError::Unauthorized)
+        ));
     }
 
     #[actix_web::test]
     async fn render_template_returns_ok_with_rendered_body_on_success() {
         let mut tera = Tera::default();
-        tera.add_raw_template("hello.txt", "Hi {{ name }}").unwrap();
+        if let Err(err) = tera.add_raw_template("hello.txt", "Hi {{ name }}") {
+            panic!("failed to add template: {err}");
+        }
 
         let mut ctx = Context::new();
         ctx.insert("name", "Slava");
@@ -238,7 +193,10 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::OK);
 
-        let body = to_bytes(resp.into_body()).await.unwrap();
+        let body = match to_bytes(resp.into_body()).await {
+            Ok(body) => body,
+            Err(err) => panic!("failed to read response body: {err}"),
+        };
         assert_eq!(&body[..], b"Hi Slava");
     }
 
@@ -252,7 +210,10 @@ mod tests {
 
         assert_eq!(resp.status(), StatusCode::OK);
 
-        let body = to_bytes(resp.into_body()).await.unwrap();
+        let body = match to_bytes(resp.into_body()).await {
+            Ok(body) => body,
+            Err(err) => panic!("failed to read response body: {err}"),
+        };
         assert!(body.is_empty(), "body should be empty on render error");
     }
 }
