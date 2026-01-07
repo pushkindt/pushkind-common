@@ -2,16 +2,31 @@ use actix_identity::Identity;
 use actix_web::http::header;
 use actix_web::{HttpResponse, Responder, get, post, web};
 use actix_web_flash_messages::{IncomingFlashMessages, Level};
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+use std::str::FromStr;
 use tera::{Context, Tera};
 
 use crate::domain::auth::AuthenticatedUser;
 use crate::models::config::CommonServerConfig;
 use crate::services::errors::{ServiceError, ServiceResult};
 
+pub fn empty_string_as_none_fromstr<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: FromStr,
+    T::Err: std::fmt::Display,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    match opt {
+        None => Ok(None),
+        Some(s) if s.trim().is_empty() => Ok(None),
+        Some(s) => T::from_str(&s).map(Some).map_err(serde::de::Error::custom),
+    }
+}
+
 pub fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
-    D: serde::Deserializer<'de>,
+    D: Deserializer<'de>,
 {
     let opt = Option::<String>::deserialize(deserializer)?;
     Ok(opt.and_then(|s| {
