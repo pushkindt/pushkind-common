@@ -5,6 +5,3 @@ pub mod config;
 
 #[cfg(feature = "dantes")]
 pub mod dantes;
-
-#[cfg(feature = "sms")]
-pub mod sms;
