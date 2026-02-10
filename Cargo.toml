@@ -19,20 +19,19 @@ actix = [
 db = ["diesel", "log"]
 dantes = ["db", "chrono"]
 zeromq = ["zmq", "log", "serde_json", "tokio"]
-sms = ["phonenumber"]
 
 [dependencies]
 actix-web = { version = "4.12.1", optional = true }
 actix-identity = { version = "0.9.0", optional = true }
-chrono = { version = "0.4.42", features = ["serde"], optional = true }
-bcrypt = { version = "0.17.1", optional = true }
-jsonwebtoken = { version = "10.2.0", optional = true, features = ["aws_lc_rs"] }
+chrono = { version = "0.4.43", features = ["serde"], optional = true }
+bcrypt = { version = "0.18.0", optional = true }
+jsonwebtoken = { version = "10.3.0", optional = true, features = ["aws_lc_rs"] }
 serde = { version = "1.0.228", features = ["derive"] }
 futures-util = { version = "0.3.31", optional = true }
 actix-web-flash-messages = { version = "0.5.0", features = [
     "cookies",
 ], optional = true }
-diesel = { version = "2.3.4", features = [
+diesel = { version = "2.3.6", features = [
     "sqlite",
     "r2d2",
     "chrono",
@@ -40,12 +39,11 @@ diesel = { version = "2.3.4", features = [
 ], optional = true }
 log = { version = "0.4.29", optional = true }
 zmq = { version = "0.10.0", optional = true }
-thiserror = { version = "2.0.17" }
-serde_json = { version = "1.0.145", optional = true }
+thiserror = { version = "2.0.18" }
+serde_json = { version = "1.0.149", optional = true }
 tera = { version = "1.20.1", features = ["builtins"], optional = true }
-tokio = { version = "1.48.0", features = ["sync"], optional = true }
-url = "2.5.7"
-phonenumber = { version = "0.3.7", optional = true }
+tokio = { version = "1.49.0", features = ["sync"], optional = true }
+url = "2.5.8"
 
 [dev-dependencies]
-tempfile = "3.13.0"
+tempfile = "3.25.0"
