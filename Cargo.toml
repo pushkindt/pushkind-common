@@ -17,17 +17,16 @@ actix = [
     "tera",
 ]
 db = ["diesel", "log"]
-dantes = ["db", "chrono"]
 zeromq = ["zmq", "log", "serde_json", "tokio"]
 
 [dependencies]
-actix-web = { version = "4.12.1", optional = true }
+actix-web = { version = "4.13.0", optional = true }
 actix-identity = { version = "0.9.0", optional = true }
 chrono = { version = "0.4.43", features = ["serde"], optional = true }
 bcrypt = { version = "0.18.0", optional = true }
 jsonwebtoken = { version = "10.3.0", optional = true, features = ["aws_lc_rs"] }
 serde = { version = "1.0.228", features = ["derive"] }
-futures-util = { version = "0.3.31", optional = true }
+futures-util = { version = "0.3.32", optional = true }
 actix-web-flash-messages = { version = "0.5.0", features = [
     "cookies",
 ], optional = true }
