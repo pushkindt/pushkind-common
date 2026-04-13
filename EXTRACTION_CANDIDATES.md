@@ -76,12 +76,14 @@ Recommended target:
 Variation points:
 
 - `NoAccessPageDto.required_role` is optional in CRM and required in ToDo and Orders.
-- Some services build `ApiMutationErrorDto` from a shared `FormError`, others from service-local form errors.
+- `ApiMutationErrorDto` now builds from a shared service-level `FormError` in Auth, CRM, Emailer, ToDo, and Orders.
+- Files does not participate in this API mutation DTO set because its migrated surface and shell contract differ.
 
 Proposed shape:
 
 - move the common structs first
-- keep service-local `From<...>` conversions in each service until form error handling converges fully
+- move the common `ApiMutationErrorDto` and `ApiFieldErrorDto` structs now
+- keep only service-specific success payload DTOs and resource DTOs local
 
 ### 3. Shell data service helpers
 
@@ -260,7 +262,7 @@ Current copies:
 Why not move immediately:
 
 - status code policies still differ by endpoint family
-- some services use shared `FormError`, others use service-local enums
+- responder entry points still differ between route modules even though the validation DTO input has converged
 
 Recommended direction:
 

@@ -1,0 +1,66 @@
+export type FrontendShellNavigationItem = {
+  name: string;
+  url: string;
+};
+
+export type FrontendShellUserMenuItem = {
+  name: string;
+  url: string;
+  iconClass?: string;
+};
+
+export type FrontendShellCurrentUser = {
+  email: string;
+  name: string;
+  hubId: number;
+  roles: string[];
+};
+
+export type FrontendShellData = {
+  currentUser: FrontendShellCurrentUser;
+  homeUrl: string;
+  navigation: FrontendShellNavigationItem[];
+  localMenuItems: FrontendShellUserMenuItem[];
+};
+
+export type FrontendShellLoadingState = {
+  status: "loading";
+};
+
+export type FrontendShellErrorState = {
+  status: "error";
+  message: string;
+};
+
+export type FrontendShellReadyState<
+  TShell extends FrontendShellData = FrontendShellData,
+  TMenuItem extends FrontendShellUserMenuItem = FrontendShellUserMenuItem,
+> = {
+  status: "ready";
+  shell: TShell;
+  authMenuItems: TMenuItem[];
+  authMenuLoaded: boolean;
+};
+
+export type FrontendShellState<
+  TShell extends FrontendShellData = FrontendShellData,
+  TMenuItem extends FrontendShellUserMenuItem = FrontendShellUserMenuItem,
+> =
+  | FrontendShellLoadingState
+  | FrontendShellReadyState<TShell, TMenuItem>
+  | FrontendShellErrorState;
+
+export type FrontendNoAccessData<
+  TUser extends FrontendShellCurrentUser = FrontendShellCurrentUser,
+> = {
+  currentUser: TUser;
+  homeUrl: string;
+  requiredRole?: string | null;
+};
+
+export type FrontendNoAccessState<
+  TData extends FrontendNoAccessData = FrontendNoAccessData,
+> =
+  | { status: "loading" }
+  | { status: "ready"; data: TData }
+  | { status: "error"; message: string };
