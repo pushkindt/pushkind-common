@@ -1,6 +1,6 @@
 # Cross-Service Extraction Candidates
 
-Last reviewed: 2026-04-12
+Last reviewed: 2026-04-13
 
 This inventory covers the React-migrated services that currently share the same migration pattern:
 
@@ -20,8 +20,12 @@ The goal is to identify code that is already duplicated or nearly duplicated, al
 - `pushkind-crm/frontend/src/components/UserMenuDropdown.tsx`
 - `pushkind-emailer/frontend/src/components/UserMenuDropdown.tsx`
 - `pushkind-files/frontend/src/components/UserMenuDropdown.tsx`
+- `pushkind-todo/frontend/src/components/UserMenuDropdown.tsx`
+- `pushkind-todo/frontend/src/pages/NoAccessPage.tsx`
+- `pushkind-orders/frontend/src/components/UserMenuDropdown.tsx`
+- `pushkind-orders/frontend/src/pages/NoAccessPage.tsx`
 
-The CRM and Emailer no-access pages now follow the same shell-hook pattern already used in ToDo and Orders. The CRM, Emailer, and Files dropdowns now follow the same component shape as the shared Auth and ToDo versions instead of carrying small local drift.
+The CRM, Emailer, ToDo, and Orders no-access pages now use the shared no-access bootstrap hook, with CRM, ToDo, and Orders also using the shared card. Auth, CRM, Emailer, Files, ToDo, and Orders now use the shared user-menu dropdown package entrypoint.
 
 ## Priority 1: exact or near-exact Rust candidates
 
@@ -200,6 +204,18 @@ Required inputs:
 - shell hook
 - service label
 
+Current state:
+
+- the data-loading hook is already shared as `useNoAccessPageData`
+- the generic card is already shared as `NoAccessCard`
+- CRM, ToDo, and Orders use the shared card directly
+- Emailer intentionally keeps custom copy, so it only uses the shared hook
+
+Conclusion:
+
+- a fully shared no-access page wrapper is still possible
+- it should support either a generic card path or a render prop for custom service copy
+
 ### 7. Frontend API shell helpers
 
 Repeated helpers:
@@ -241,6 +257,162 @@ Proposed extraction style:
 
 - extract only the JSON readers, redirect handling, shell fetchers, and mutation error helpers first
 - leave resource-specific parsers inside each service
+
+Current state:
+
+- this is still the largest remaining frontend duplication
+- `pushkind-auth/frontend/src/lib/api.ts`
+- `pushkind-crm/frontend/src/lib/api.ts`
+- `pushkind-emailer/frontend/src/lib/api.ts`
+- `pushkind-todo/frontend/src/lib/api.ts`
+- `pushkind-orders/frontend/src/lib/api.ts`
+  all still carry overlapping redirect-aware JSON parsing and mutation error handling logic
+
+Recommended split:
+
+- `frontend/src/json.ts` for low-level payload readers
+- `frontend/src/mutations.ts` for `ApiMutationError`, `ApiMutationSuccess`, guards, field-error mapping, and redirect-aware mutation helpers
+- keep service resource parsers local
+
+### 7a. Shared frontend shell and mutation types
+
+Current copies:
+
+- `pushkind-crm/frontend/src/lib/models.ts`
+- `pushkind-emailer/frontend/src/lib/models.ts`
+- `pushkind-todo/frontend/src/lib/models.ts`
+- `pushkind-orders/frontend/src/lib/models.ts`
+- related shell and mutation types in `pushkind-auth/frontend/src/lib/api.ts`
+
+Repeated shapes:
+
+- `NavigationItem`
+- `UserMenuItem`
+- `CurrentUser`
+- `ShellData`
+- `NoAccessData`
+- `ApiFieldError`
+- `ApiMutationSuccess`
+- `ApiMutationError`
+
+Current state:
+
+- `pushkind-common/frontend/src/types.ts` already defines the common shell types
+- the services still duplicate local aliases or copies instead of importing those shared types
+- mutation response types are still duplicated and should be added to the shared package next
+
+Recommended target:
+
+- extend `frontend/src/types.ts`
+- re-export stable aliases from service-local model files during the transition if needed
+
+### 7b. Shared shell fatal-state component
+
+Current copies:
+
+- `pushkind-crm/frontend/src/components/CrmShellFatalState.tsx`
+- `pushkind-emailer/frontend/src/components/EmailerShellFatalState.tsx`
+- `pushkind-todo/frontend/src/components/TodoShellFatalState.tsx`
+- `pushkind-orders/frontend/src/components/OrdersShellFatalState.tsx`
+
+Status:
+
+- these are near-identical components that differ mostly in service labels or wording
+
+Recommended target:
+
+- `frontend/src/ShellFatalState.tsx`
+
+Recommended inputs:
+
+- `message`
+- optional `serviceLabel`
+- optional `className`
+
+### 7c. Shared shell wrapper component
+
+Current copies:
+
+- `pushkind-crm/frontend/src/components/CrmShell.tsx`
+- `pushkind-emailer/frontend/src/components/EmailerShell.tsx`
+- `pushkind-todo/frontend/src/components/TodoShell.tsx`
+- `pushkind-orders/frontend/src/components/OrdersShell.tsx`
+
+Shared responsibilities:
+
+- render navbar
+- expose `window.showFlashMessage`
+- manage Bootstrap flash modal or alert stack
+- optionally initialize popovers/tooltips
+- render children
+
+Current blockers:
+
+- flash rendering still differs between modal-based shells and inline-stack shells
+- Bootstrap helper initialization differs slightly by service
+
+Conclusion:
+
+- this is a valid extraction target, but only after one more alignment pass on flash delivery and optional Bootstrap feature flags
+
+### 7d. Shared shell navbar component
+
+Current copies:
+
+- `pushkind-crm/frontend/src/components/CrmNavbar.tsx`
+- `pushkind-todo/frontend/src/components/TodoNavbar.tsx`
+- `pushkind-orders/frontend/src/components/OrdersNavbar.tsx`
+
+Observed drift:
+
+- CRM adds `pt-2`, a `crm-navbar` class, and wraps the search slot in `crm-navbar-search`
+- ToDo uses the simplest form with `pt-2` and no extra wrappers
+- Orders omits `pt-2`, uses a different user-menu wrapper, and renders a built-in fallback search form when `search` is absent
+
+Assessment:
+
+- these components should be nearly identical
+- the current differences are mostly migration drift, not fundamental service requirements
+- the only potentially legitimate variation is Orders' fallback search form, and even that should be prop-driven rather than implemented in a separate navbar
+
+Recommended target:
+
+- `frontend/src/ServiceNavbar.tsx`
+
+Recommended inputs:
+
+- `brandLabel`
+- `collapseId`
+- `navigation`
+- `currentUserEmail`
+- `homeUrl`
+- `localMenuItems`
+- `fetchedMenuItems`
+- `search`
+- optional `navbarClassName`
+- optional `outerContainerClassName`
+- optional `searchWrapperClassName`
+- optional `fallbackSearch`
+
+Extraction prerequisite:
+
+- align the three implementations to the same DOM shape first so the shared component preserves Tera-era UI parity
+
+### 7e. Shared dropdown multi-select
+
+Current copies:
+
+- `pushkind-orders/frontend/src/components/DropdownMultiSelect.tsx`
+- `pushkind-auth/frontend/src/components/DropdownMultiSelect.tsx`
+
+Status:
+
+- this appears to be converging into the same component API
+- once Auth and Orders settle on the same props and rendering, it should move into the shared frontend package
+
+Recommended target:
+
+- `frontend/src/DropdownMultiSelect.tsx`
 
 ## Priority 3: follow-up Rust candidates
 
