@@ -21,6 +21,8 @@ export {
   type UserMenuDropdownProps,
 } from "./UserMenuDropdown";
 
+export { ServiceNavbar, type ServiceNavbarProps } from "./ServiceNavbar";
+
 export {
   useServiceShell,
   type UseServiceShellOptions,

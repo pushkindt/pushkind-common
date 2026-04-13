@@ -33,6 +33,10 @@
       "types": "./frontend/src/UserMenuDropdown.tsx",
       "default": "./frontend/src/UserMenuDropdown.tsx"
     },
+    "./ServiceNavbar": {
+      "types": "./frontend/src/ServiceNavbar.tsx",
+      "default": "./frontend/src/ServiceNavbar.tsx"
+    },
     "./useServiceShell": {
       "types": "./frontend/src/useServiceShell.ts",
       "default": "./frontend/src/useServiceShell.ts"
