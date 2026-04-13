@@ -25,3 +25,17 @@ target
 
 /target
 Cargo.lock
+
+# Frontend package artifacts
+node_modules/
+frontend/node_modules/
+*.tgz
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+frontend/coverage/
+dist/
+frontend/dist/

@@ -4,17 +4,46 @@
   "private": false,
   "type": "module",
   "sideEffects": false,
-  "main": "./index.js",
-  "types": "./index.d.ts",
+  "scripts": {
+    "format": "prettier --write \"frontend/src/**/*.{ts,tsx}\" \"frontend/tsconfig.json\"",
+    "format:check": "prettier --check \"frontend/src/**/*.{ts,tsx}\" \"frontend/tsconfig.json\"",
+    "lint": "tsc -p frontend/tsconfig.json --noEmit",
+    "typecheck": "tsc -p frontend/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "files": [
-    "index.js",
-    "index.d.ts",
+    "frontend",
     "README.md"
   ],
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "types": "./frontend/src/index.ts",
+      "default": "./frontend/src/index.ts"
+    },
+    "./UserMenuDropdown": {
+      "types": "./frontend/src/UserMenuDropdown.tsx",
+      "default": "./frontend/src/UserMenuDropdown.tsx"
+    },
+    "./useServiceShell": {
+      "types": "./frontend/src/useServiceShell.ts",
+      "default": "./frontend/src/useServiceShell.ts"
+    },
+    "./noAccess": {
+      "types": "./frontend/src/noAccess.tsx",
+      "default": "./frontend/src/noAccess.tsx"
+    },
+    "./types": {
+      "types": "./frontend/src/types.ts",
+      "default": "./frontend/src/types.ts"
     }
   }
 }
