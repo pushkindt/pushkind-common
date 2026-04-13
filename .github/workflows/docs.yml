@@ -24,7 +24,7 @@ jobs:
 
       - name: Build docs
         run: |
-          cargo doc --locked --no-deps --all-features
+          cargo doc --offline --no-deps --all-features
           # Redirect root to your crate docs. Replace my_crate with your crate dir
           # Note: if your package name has '-', the crate dir uses '_' (e.g. foo-bar -> foo_bar)
           CRATE_DIR=$(grep -m1 '^name =' Cargo.toml | sed -E 's/.*"([^"]+)".*/\1/' | tr '-' '_')
