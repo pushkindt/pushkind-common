@@ -39,3 +39,4 @@ coverage/
 frontend/coverage/
 dist/
 frontend/dist/
+package-lock.json
