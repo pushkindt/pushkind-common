@@ -58,6 +58,21 @@ export type FrontendNoAccessData<
   requiredRole?: string | null;
 };
 
+export type FrontendApiFieldError = {
+  field: string;
+  message: string;
+};
+
+export type FrontendApiMutationSuccess = {
+  message: string;
+  redirectTo?: string;
+};
+
+export type FrontendApiMutationError = {
+  message: string;
+  fieldErrors: FrontendApiFieldError[];
+};
+
 export type FrontendNoAccessState<
   TData extends FrontendNoAccessData = FrontendNoAccessData,
 > =
