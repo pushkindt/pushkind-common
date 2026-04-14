@@ -42,9 +42,9 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: package-lock.json
+          cache-dependency-path: package.json
       - name: Install frontend dependencies
-        run: npm ci
+        run: npm install
       - name: Check frontend formatting
         run: npm run format:check
       - name: Lint frontend code
