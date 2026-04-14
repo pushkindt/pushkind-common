@@ -11,14 +11,14 @@
     "typecheck": "tsc -p frontend/tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "prettier": "^3.8.1",
     "typescript": "^6.0.2"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "files": [
     "frontend",
@@ -36,6 +36,22 @@
     "./ServiceNavbar": {
       "types": "./frontend/src/ServiceNavbar.tsx",
       "default": "./frontend/src/ServiceNavbar.tsx"
+    },
+    "./ModalFlashShell": {
+      "types": "./frontend/src/ModalFlashShell.tsx",
+      "default": "./frontend/src/ModalFlashShell.tsx"
+    },
+    "./ShellFatalState": {
+      "types": "./frontend/src/ShellFatalState.tsx",
+      "default": "./frontend/src/ShellFatalState.tsx"
+    },
+    "./shellApi": {
+      "types": "./frontend/src/shellApi.ts",
+      "default": "./frontend/src/shellApi.ts"
+    },
+    "./json": {
+      "types": "./frontend/src/json.ts",
+      "default": "./frontend/src/json.ts"
     },
     "./useServiceShell": {
       "types": "./frontend/src/useServiceShell.ts",

@@ -24,8 +24,18 @@ The goal is to identify code that is already duplicated or nearly duplicated, al
 - `pushkind-todo/frontend/src/pages/NoAccessPage.tsx`
 - `pushkind-orders/frontend/src/components/UserMenuDropdown.tsx`
 - `pushkind-orders/frontend/src/pages/NoAccessPage.tsx`
+- `pushkind-crm/frontend/src/components/CrmShell.tsx`
+- `pushkind-emailer/frontend/src/components/EmailerShell.tsx`
+- `pushkind-orders/frontend/src/components/OrdersShell.tsx`
+- `pushkind-crm/frontend/src/components/CrmShellFatalState.tsx`
+- `pushkind-emailer/frontend/src/components/EmailerShellFatalState.tsx`
+- `pushkind-todo/frontend/src/components/TodoShellFatalState.tsx`
+- `pushkind-orders/frontend/src/components/OrdersShellFatalState.tsx`
+- shared shell parsing/fetch helpers now extracted into `pushkind-common/frontend/src/shellApi.ts`
+- shared low-level JSON readers now extracted into `pushkind-common/frontend/src/json.ts`
+- shared shell/base frontend types now live in `pushkind-common/frontend/src/types.ts`
 
-The CRM, Emailer, ToDo, and Orders no-access pages now use the shared no-access bootstrap hook, with CRM, ToDo, and Orders also using the shared card. Auth, CRM, Emailer, Files, ToDo, and Orders now use the shared user-menu dropdown package entrypoint.
+The CRM, Emailer, ToDo, and Orders no-access pages now use the shared no-access bootstrap hook, with CRM, ToDo, and Orders also using the shared card. Auth, CRM, Emailer, Files, ToDo, and Orders now use the shared user-menu dropdown package entrypoint. CRM, Emailer, and Orders now use the shared modal-flash shell wrapper, and the converged fatal-state components now use the shared fatal-state primitive.
 
 ## Priority 1: exact or near-exact Rust candidates
 
@@ -260,17 +270,14 @@ Proposed extraction style:
 
 Current state:
 
-- this is still the largest remaining frontend duplication
-- `pushkind-auth/frontend/src/lib/api.ts`
-- `pushkind-crm/frontend/src/lib/api.ts`
-- `pushkind-emailer/frontend/src/lib/api.ts`
-- `pushkind-todo/frontend/src/lib/api.ts`
-- `pushkind-orders/frontend/src/lib/api.ts`
-  all still carry overlapping redirect-aware JSON parsing and mutation error handling logic
+- the shell-focused part of this extraction is now done in:
+  - `pushkind-common/frontend/src/json.ts`
+  - `pushkind-common/frontend/src/shellApi.ts`
+- CRM, Emailer, ToDo, and Orders source files have been switched to those shared shell helpers
+- the mutation-helper layer is still duplicated and should be extracted next
 
 Recommended split:
 
-- `frontend/src/json.ts` for low-level payload readers
 - `frontend/src/mutations.ts` for `ApiMutationError`, `ApiMutationSuccess`, guards, field-error mapping, and redirect-aware mutation helpers
 - keep service resource parsers local
 
@@ -297,9 +304,9 @@ Repeated shapes:
 
 Current state:
 
-- `pushkind-common/frontend/src/types.ts` already defines the common shell types
-- the services still duplicate local aliases or copies instead of importing those shared types
-- mutation response types are still duplicated and should be added to the shared package next
+- `pushkind-common/frontend/src/types.ts` now defines the common shell types and shared camel-case mutation types
+- CRM, Emailer, ToDo, and Orders now alias those shell types instead of redefining them locally
+- snake-case raw mutation transport types still remain local in Auth, CRM, Emailer, and Orders
 
 Recommended target:
 
@@ -317,7 +324,8 @@ Current copies:
 
 Status:
 
-- these are near-identical components that differ mostly in service labels or wording
+- extracted as `pushkind-common/frontend/src/ShellFatalState.tsx`
+- CRM, Emailer, ToDo, and Orders now use it
 
 Recommended target:
 
@@ -346,14 +354,15 @@ Shared responsibilities:
 - optionally initialize popovers/tooltips
 - render children
 
-Current blockers:
+Current state:
 
-- flash rendering still differs between modal-based shells and inline-stack shells
-- Bootstrap helper initialization differs slightly by service
+- the modal-flash shell variant is now extracted as `pushkind-common/frontend/src/ModalFlashShell.tsx`
+- CRM, Emailer, and Orders now use it
+- ToDo still intentionally differs because it uses an inline stacked alert model instead of modal-hosted flash rendering
 
 Conclusion:
 
-- this is a valid extraction target, but only after one more alignment pass on flash delivery and optional Bootstrap feature flags
+- only the ToDo-style inline alert shell remains as a separate variant
 
 ### 7d. Shared shell navbar component
 
@@ -371,9 +380,9 @@ Observed drift:
 
 Assessment:
 
-- these components should be nearly identical
-- the current differences are mostly migration drift, not fundamental service requirements
-- the only potentially legitimate variation is Orders' fallback search form, and even that should be prop-driven rather than implemented in a separate navbar
+- extracted as `pushkind-common/frontend/src/ServiceNavbar.tsx`
+- CRM, ToDo, Orders, and Emailer source files have been switched to it
+- the remaining work here is only to refresh consuming repos against the pushed package revision and verify UI parity
 
 Recommended target:
 
