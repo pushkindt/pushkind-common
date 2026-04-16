@@ -44,4 +44,3 @@ pub struct NoAccessPageDto {
     pub home_url: String,
     pub required_role: Option<String>,
 }
-
