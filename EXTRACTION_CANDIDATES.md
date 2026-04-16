@@ -50,8 +50,8 @@ Current copies:
 
 Status:
 
-- `pushkind-files`, `pushkind-crm`, and `pushkind-emailer` are byte-for-byte identical.
-- `pushkind-auth` is the same helper with different documentation wording.
+- **Moved:** implemented in `pushkind-common/src/frontend.rs` as `open_frontend_html` and `FrontendAssetError`.
+- **Services updated:** `pushkind-auth`, `pushkind-files`, `pushkind-crm`, `pushkind-emailer`, and `pushkind-todo`, `pushkind-orders` now re-export the common helper from `pushkind-common`.
 
 Recommended target:
 
@@ -98,6 +98,77 @@ Proposed shape:
 - move the common structs first
 - move the common `ApiMutationErrorDto` and `ApiFieldErrorDto` structs now
 - keep only service-specific success payload DTOs and resource DTOs local
+
+#### Concrete DTO types and current locations
+
+Below are the concrete, repeatedly-defined Rust DTO types (the minimal shared set) and where their authoritative definitions currently live. Status shows whether the type has been moved to `pushkind-common`.
+
+- `CurrentUserDto` — defined in:
+  - `pushkind-auth/src/dto/api.rs`
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-files/src/dto/mod.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved (recommend: `pushkind_common::dto::shell::CurrentUserDto`).
+
+- `NavigationItemDto` — defined in:
+  - `pushkind-auth/src/dto/api.rs`
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved (recommend: `pushkind_common::dto::shell::NavigationItemDto`).
+
+- `IamDto` / `ShellDataDto` (service naming differs) — defined in:
+  - `pushkind-auth/src/dto/api.rs` (`ShellDataDto`)
+  - `pushkind-crm/src/dto/api.rs` (`IamDto`)
+  - `pushkind-emailer/src/dto/api.rs` (`IamDto`)
+  - `pushkind-todo/src/dto/api.rs` (`IamDto`)
+  - `pushkind-orders/src/dto/api.rs` (`IamDto`)
+  - `pushkind-files/src/dto/mod.rs` (`FilesShellDto`) — files uses a smaller shell shape
+  Status: not moved (recommend: consolidate as `pushkind_common::dto::shell::ShellDataDto` with minimal variation hooks).
+
+- `NoAccessPageDto` — defined in:
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-files/src/dto/mod.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved — note: `required_role` semantics differ (`Option<String>` vs `&'static str`).
+
+- `ApiFieldErrorDto` — defined in:
+  - `pushkind-auth/src/dto/api.rs`
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-files/src/dto/mod.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved (recommend: `pushkind_common::dto::mutation::ApiFieldErrorDto`).
+
+- `ApiMutationErrorDto` — defined in:
+  - `pushkind-auth/src/dto/api.rs`
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-files/src/dto/mod.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved (recommend: `pushkind_common::dto::mutation::ApiMutationErrorDto`).
+
+- `ApiMutationSuccessDto` — defined in:
+  - `pushkind-auth/src/dto/api.rs`
+  - `pushkind-crm/src/dto/api.rs`
+  - `pushkind-emailer/src/dto/api.rs`
+  - `pushkind-files/src/dto/mod.rs`
+  - `pushkind-todo/src/dto/api.rs`
+  - `pushkind-orders/src/dto/api.rs`
+  Status: not moved (keep service-specific success payloads local where they carry extra data; extract the common minimal success DTO).
+
+Notes:
+- `FilesShellDto` intentionally differs (smaller shape) — keep it local or provide a thin adapter.
+- `required_role` differences must be reconciled (optional vs static str) during extraction; prefer optional fields for flexibility.
+
+Recommended next step for DTOs: extract `ApiFieldErrorDto` and `ApiMutationErrorDto` first (low-risk), then `CurrentUserDto` + `NavigationItemDto` + `ShellDataDto/IamDto` with adapters for service-specific extras.
 
 ### 3. Shell data service helpers
 

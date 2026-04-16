@@ -1,25 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
-declare global {
-  interface Window {
-    bootstrap?: {
-      Modal: {
-        getOrCreateInstance: (
-          element: string | Element,
-          options?: object,
-        ) => {
-          hide: () => void;
-          show: () => void;
-        };
-      };
-      Popover?: new (element: Element) => { dispose?: () => void };
-      Tooltip?: new (element: Element) => { dispose?: () => void };
-    };
-    showFlashMessage?: (message: string, category?: string) => void;
-  }
-}
-
 type ModalFlashShellProps = {
   navbar: ReactNode;
   children: ReactNode;

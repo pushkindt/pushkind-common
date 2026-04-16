@@ -15,9 +15,12 @@ actix = [
     "futures-util",
     "log",
     "tera",
+    "actix-files",
+    "url",
 ]
 db = ["diesel", "log"]
 zeromq = ["zmq", "log", "serde_json", "tokio"]
+actix-files = ["dep:actix-files"]
 
 [dependencies]
 actix-web = { version = "4.13.0", optional = true }
@@ -41,8 +44,9 @@ zmq = { version = "0.10.0", optional = true }
 thiserror = { version = "2.0.18" }
 serde_json = { version = "1.0.149", optional = true }
 tera = { version = "1.20.1", features = ["builtins"], optional = true }
-tokio = { version = "1.51.1", features = ["sync"], optional = true }
-url = "2.5.8"
+tokio = { version = "1.52.0", features = ["sync"], optional = true }
+url = { version = "2.5.8", optional = true }
+actix-files = { version = "0.6.10", optional = true }
 
 [dev-dependencies]
 tempfile = "3.27.0"

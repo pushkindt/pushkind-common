@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 
-import type { FrontendNoAccessData, FrontendNoAccessState } from "./types";
+import type { ReactNode, ComponentType } from "react";
+import type {
+  FrontendNoAccessData,
+  FrontendNoAccessState,
+  FrontendShellData,
+  FrontendShellNavigationItem,
+  FrontendShellUserMenuItem,
+} from "./types";
+import { useServiceShell } from "./useServiceShell";
 
 export type UseNoAccessPageDataOptions<
   TData extends FrontendNoAccessData = FrontendNoAccessData,
@@ -102,5 +110,88 @@ export function NoAccessCard({
         </div>
       </div>
     </main>
+  );
+}
+
+export type ServiceNoAccessPageProps<
+  TNoAccessData extends FrontendNoAccessData,
+  TShellData extends FrontendShellData,
+  TMenuItem extends FrontendShellUserMenuItem,
+> = {
+  fetchShellData: () => Promise<TShellData>;
+  fetchHubMenuItems: (homeUrl: string, hubId: number) => Promise<TMenuItem[]>;
+  fetchNoAccessData: () => Promise<TNoAccessData>;
+  serviceLabel: string;
+  logoutAction?: string;
+  menuLoadWarning?: string;
+  noAccessCardClassName?: string;
+  ShellComponent: ComponentType<{
+    navigation: FrontendShellNavigationItem[];
+    currentUserEmail: string;
+    homeUrl: string;
+    localMenuItems: FrontendShellUserMenuItem[];
+    fetchedMenuItems: TMenuItem[];
+    children: ReactNode;
+  }>;
+  FatalStateComponent: ComponentType<{ message: string }>;
+};
+
+export function ServiceNoAccessPage<
+  TNoAccessData extends FrontendNoAccessData,
+  TShellData extends FrontendShellData,
+  TMenuItem extends FrontendShellUserMenuItem,
+>({
+  fetchShellData,
+  fetchHubMenuItems,
+  fetchNoAccessData,
+  serviceLabel,
+  logoutAction = "/logout",
+  menuLoadWarning = "Failed to load auth navigation menu.",
+  noAccessCardClassName,
+  ShellComponent,
+  FatalStateComponent,
+}: ServiceNoAccessPageProps<TNoAccessData, TShellData, TMenuItem>) {
+  const shellState = useServiceShell<TShellData, TMenuItem>({
+    errorMessage: `Не удалось загрузить оболочку ${serviceLabel}.`,
+    menuLoadWarning,
+    fetchShellData,
+    fetchHubMenuItems,
+  });
+
+  const noAccessState = useNoAccessPageData<TNoAccessData>({
+    errorMessage: "Не удалось загрузить страницу.",
+    fetchNoAccessData,
+  });
+
+  if (shellState.status === "error") {
+    return <FatalStateComponent message={shellState.message} />;
+  }
+
+  if (shellState.status === "loading" || noAccessState.status === "loading") {
+    return null;
+  }
+
+  if (noAccessState.status === "error") {
+    return <FatalStateComponent message={noAccessState.message} />;
+  }
+
+  return (
+    <ShellComponent
+      navigation={shellState.shell.navigation}
+      currentUserEmail={shellState.shell.currentUser.email}
+      homeUrl={shellState.shell.homeUrl}
+      localMenuItems={shellState.shell.localMenuItems}
+      fetchedMenuItems={shellState.authMenuItems}
+    >
+      <NoAccessCard
+        className={noAccessCardClassName}
+        serviceLabel={serviceLabel}
+        currentUserName={noAccessState.data.currentUser.name}
+        currentUserEmail={noAccessState.data.currentUser.email}
+        homeUrl={noAccessState.data.homeUrl}
+        requiredRole={noAccessState.data.requiredRole}
+        logoutAction={logoutAction}
+      />
+    </ShellComponent>
   );
 }
