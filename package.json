@@ -13,7 +13,7 @@
   "devDependencies": {
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.3",
     "typescript": "^6.0.2"
   },
   "peerDependencies": {
@@ -28,6 +28,10 @@
     ".": {
       "types": "./frontend/src/index.ts",
       "default": "./frontend/src/index.ts"
+    },
+    "./DropdownMultiSelect": {
+      "types": "./frontend/src/DropdownMultiSelect.tsx",
+      "default": "./frontend/src/DropdownMultiSelect.tsx"
     },
     "./UserMenuDropdown": {
       "types": "./frontend/src/UserMenuDropdown.tsx",
@@ -60,6 +64,10 @@
     "./noAccess": {
       "types": "./frontend/src/noAccess.tsx",
       "default": "./frontend/src/noAccess.tsx"
+    },
+    "./mutations": {
+      "types": "./frontend/src/mutations.ts",
+      "default": "./frontend/src/mutations.ts"
     },
     "./types": {
       "types": "./frontend/src/types.ts",

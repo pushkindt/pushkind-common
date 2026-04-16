@@ -11,6 +11,9 @@ pub mod pagination;
 #[cfg(feature = "actix")]
 pub mod routes;
 
+#[cfg(feature = "actix")]
+pub mod frontend;
+
 #[cfg(feature = "db")]
 pub mod db;
 #[cfg(feature = "db")]
@@ -20,5 +23,6 @@ pub mod repository;
 pub mod zmq;
 
 pub mod domain;
+pub mod dto;
 pub mod models;
 pub mod services;

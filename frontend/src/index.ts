@@ -16,8 +16,10 @@ export { ModalFlashShell } from "./ModalFlashShell";
 
 export {
   NoAccessCard,
+  ServiceNoAccessPage,
   useNoAccessPageData,
   type NoAccessCardProps,
+  type ServiceNoAccessPageProps,
   type UseNoAccessPageDataOptions,
 } from "./noAccess";
 
@@ -27,6 +29,12 @@ export {
   UserMenuDropdown,
   type UserMenuDropdownProps,
 } from "./UserMenuDropdown";
+
+export {
+  DropdownMultiSelect,
+  type DropdownMultiSelectProps,
+  type DropdownMultiSelectOption,
+} from "./DropdownMultiSelect";
 
 export { ServiceNavbar, type ServiceNavbarProps } from "./ServiceNavbar";
 

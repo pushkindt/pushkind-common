@@ -79,3 +79,23 @@ export type FrontendNoAccessState<
   | { status: "loading" }
   | { status: "ready"; data: TData }
   | { status: "error"; message: string };
+
+declare global {
+  interface Window {
+    showFlashMessage?: (message: string, category?: string) => void;
+    bootstrap?: {
+      Modal: {
+        getOrCreateInstance: (
+          element: string | Element,
+          options?: object,
+        ) => {
+          hide: () => void;
+          show: () => void;
+          dispose?: () => void;
+        };
+      };
+      Popover?: new (element: Element) => { dispose?: () => void };
+      Tooltip?: new (element: Element) => { dispose?: () => void };
+    };
+  }
+}
