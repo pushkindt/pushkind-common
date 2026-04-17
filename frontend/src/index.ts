@@ -47,7 +47,6 @@ export {
   fetchShellData,
   handleAuthRedirectResponse,
   isJsonResponse,
-  normalizeAuthRedirectUrl,
   parseCurrentUser,
   parseMenuItems,
   parseNavigationItems,
