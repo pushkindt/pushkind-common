@@ -1,4 +1,8 @@
-import { readJsonResponse, ensureResponseIsNotAuthRedirect } from "./shellApi";
+import {
+  readJsonResponse,
+  ensureResponseIsNotAuthRedirect,
+  isJsonResponse,
+} from "./shellApi";
 import { isRecord } from "./json";
 
 export interface ApiFieldError {
@@ -45,6 +49,53 @@ export function isApiMutationError(error: unknown): error is ApiMutationError {
   );
 }
 
+function statusMutationError(response: Response): ApiMutationError {
+  if (response.status === 401) {
+    return {
+      message: "Сессия истекла. Войдите снова и повторите действие.",
+      field_errors: [],
+    };
+  }
+
+  if (response.status === 403) {
+    return {
+      message: "Недостаточно прав для выполнения действия.",
+      field_errors: [],
+    };
+  }
+
+  return {
+    message: `Запрос не выполнен. Статус: ${response.status}.`,
+    field_errors: [],
+  };
+}
+
+async function readMutationResponse(
+  response: Response,
+  endpoint: string,
+): Promise<ApiMutationSuccess> {
+  ensureResponseIsNotAuthRedirect(response);
+
+  if (!response.ok && !isJsonResponse(response)) {
+    throw statusMutationError(response);
+  }
+
+  const payload = await readJsonResponse<ApiMutationSuccess | ApiMutationError>(
+    response,
+    endpoint,
+  );
+
+  if (!response.ok) {
+    if (isApiMutationError(payload)) {
+      throw payload;
+    }
+
+    throw statusMutationError(response);
+  }
+
+  return payload as ApiMutationSuccess;
+}
+
 export async function postForm(
   endpoint: string,
   body: URLSearchParams,
@@ -59,17 +110,7 @@ export async function postForm(
     body: body.toString(),
   });
 
-  ensureResponseIsNotAuthRedirect(response);
-
-  const payload = (await readJsonResponse(response, endpoint)) as
-    | ApiMutationSuccess
-    | ApiMutationError;
-
-  if (!response.ok) {
-    throw payload as ApiMutationError;
-  }
-
-  return payload as ApiMutationSuccess;
+  return readMutationResponse(response, endpoint);
 }
 
 export async function postMultipartForm(
@@ -85,17 +126,7 @@ export async function postMultipartForm(
     body,
   });
 
-  ensureResponseIsNotAuthRedirect(response);
-
-  const payload = (await readJsonResponse(response, endpoint)) as
-    | ApiMutationSuccess
-    | ApiMutationError;
-
-  if (!response.ok) {
-    throw payload as ApiMutationError;
-  }
-
-  return payload as ApiMutationSuccess;
+  return readMutationResponse(response, endpoint);
 }
 
 export async function postEmpty(endpoint: string): Promise<ApiMutationSuccess> {
@@ -107,15 +138,5 @@ export async function postEmpty(endpoint: string): Promise<ApiMutationSuccess> {
     credentials: "include",
   });
 
-  ensureResponseIsNotAuthRedirect(response);
-
-  const payload = (await readJsonResponse(response, endpoint)) as
-    | ApiMutationSuccess
-    | ApiMutationError;
-
-  if (!response.ok) {
-    throw payload as ApiMutationError;
-  }
-
-  return payload as ApiMutationSuccess;
+  return readMutationResponse(response, endpoint);
 }
