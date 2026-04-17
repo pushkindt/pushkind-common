@@ -4,3 +4,4 @@ check:
 	cargo test --all-features
 	npm run format
 	npm run lint
+	npm run test
