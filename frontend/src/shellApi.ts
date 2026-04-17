@@ -19,6 +19,21 @@ export const browserLocation = {
   },
 };
 
+function currentVisiblePath(): string {
+  const path = `${window.location.pathname}${window.location.search}`;
+  return path || "/";
+}
+
+export function normalizeAuthRedirectUrl(url: string): string {
+  const redirectUrl = new URL(url, window.location.href);
+
+  if (redirectUrl.searchParams.has("next")) {
+    redirectUrl.searchParams.set("next", currentVisiblePath());
+  }
+
+  return redirectUrl.toString();
+}
+
 export function isJsonResponse(response: Response): boolean {
   return (
     response.headers.get("content-type")?.includes("application/json") ?? false
@@ -26,7 +41,7 @@ export function isJsonResponse(response: Response): boolean {
 }
 
 export function handleAuthRedirectResponse(response: Response): never {
-  browserLocation.assign(response.url);
+  browserLocation.assign(normalizeAuthRedirectUrl(response.url));
   throw new Error("Сессия истекла. Выполняется переход на страницу входа.");
 }
 
