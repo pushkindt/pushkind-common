@@ -18,6 +18,9 @@
     "typescript": "^6.0.2",
     "vitest": "^4.1.4"
   },
+  "dependencies": {
+    "marked": "^18.0.2"
+  },
   "peerDependencies": {
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
@@ -70,6 +73,10 @@
     "./mutations": {
       "types": "./frontend/src/mutations.ts",
       "default": "./frontend/src/mutations.ts"
+    },
+    "./markdown": {
+      "types": "./frontend/src/markdown.tsx",
+      "default": "./frontend/src/markdown.tsx"
     },
     "./types": {
       "types": "./frontend/src/types.ts",
