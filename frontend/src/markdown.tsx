@@ -1,5 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ChangeEvent, HTMLAttributes, ReactNode } from "react";
+import type {
+  ChangeEvent,
+  CSSProperties,
+  HTMLAttributes,
+  ReactNode,
+} from "react";
 import { marked } from "marked";
 
 declare global {
@@ -49,6 +54,7 @@ export type MarkdownComposerFileBrowserConfig = {
   historyMode?: "managed" | "disabled";
   scriptPath?: string;
   rootClassName?: string;
+  rootStyle?: CSSProperties;
   panelClassName?: string;
   helpText?: ReactNode;
   loadingLabel?: ReactNode;
@@ -79,6 +85,10 @@ export type MarkdownComposerProps = {
 type FileBrowserStatus = "idle" | "loading" | "ready" | "error";
 
 const DEFAULT_FILE_BROWSER_SCRIPT_PATH = "/assets/filebrowser.js";
+const DEFAULT_FILE_BROWSER_ROOT_STYLE: CSSProperties = {
+  maxHeight: "50vh",
+  overflowY: "auto",
+};
 
 function joinClasses(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -346,6 +356,10 @@ export function MarkdownComposer({
                 "shell-markdown-composer-file-browser",
                 fileBrowser.rootClassName,
               )}
+              style={{
+                ...DEFAULT_FILE_BROWSER_ROOT_STYLE,
+                ...fileBrowser.rootStyle,
+              }}
               ref={fileBrowserRootRef}
             />
             {fileBrowserStatus === "loading" ? (

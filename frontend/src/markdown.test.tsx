@@ -77,5 +77,7 @@ describe("MarkdownComposer", () => {
     expect(markup).toContain("Files");
     expect(markup).toContain("Use copied URLs in markdown.");
     expect(markup).toContain("shell-markdown-composer-file-browser");
+    expect(markup).toContain("max-height:50vh");
+    expect(markup).toContain("overflow-y:auto");
   });
 });
