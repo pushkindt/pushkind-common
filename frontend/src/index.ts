@@ -78,7 +78,11 @@ export {
 } from "./useServiceShell";
 
 export {
+  MarkdownComposer,
   MarkdownPreview,
   renderMarkdownToHtml,
+  type MarkdownComposerFileBrowserConfig,
+  type MarkdownComposerMode,
+  type MarkdownComposerProps,
   type MarkdownPreviewProps,
 } from "./markdown";
